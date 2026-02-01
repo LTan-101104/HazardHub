@@ -1,7 +1,5 @@
-package hazardhub.com.hub.model.entity;
+package hazardhub.com.hub.model.dto;
 
-import com.google.cloud.firestore.annotation.DocumentId;
-import com.google.cloud.firestore.annotation.ServerTimestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,23 +12,12 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
-
-    @DocumentId
-    private String id; // Firebase UID
-
+public class UserResponse {
+    private String id;
     private String email;
     private String phone;
     private String displayName;
-
-    // Firebase handles password hashing,
-    // passwordHash is managed by Firebase Authentication
-
     private Map insuranceDispatchConfig;
-
-    @ServerTimestamp
     private Date createdAt;
-
-    @ServerTimestamp
     private Date updatedAt;
 }
