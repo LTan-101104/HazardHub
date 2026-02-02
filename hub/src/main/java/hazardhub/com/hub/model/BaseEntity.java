@@ -4,27 +4,28 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 public abstract class BaseEntity {
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+
+    @CreatedDate
+    private Instant createdAt;
+
+    @LastModifiedDate
+    private Instant updatedAt;
+
+    @CreatedBy
     private String createdBy;
+
+    @LastModifiedBy
     private String updatedBy;
-
-    // Call before saving a new document
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-        this.createdBy = "Admin";
-    }
-
-    // Call before updating an existing document
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-        this.updatedBy = "Admin";
-    }
 }
