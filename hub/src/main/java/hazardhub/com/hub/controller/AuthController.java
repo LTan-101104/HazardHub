@@ -1,7 +1,7 @@
 package hazardhub.com.hub.controller;
 
 import hazardhub.com.hub.model.dto.AuthResponse;
-import hazardhub.com.hub.model.dto.LoginRequest;
+// import hazardhub.com.hub.model.dto.LoginRequest;
 import hazardhub.com.hub.model.dto.UserRegistration;
 import hazardhub.com.hub.model.dto.UserResponse;
 import hazardhub.com.hub.service.UserService;
@@ -35,26 +35,28 @@ public class AuthController {
 
         AuthResponse response = AuthResponse.builder()
                 .user(user)
-                .message("User registered successfully. Please sign in to get your token.")
+                .message("User registered successfully. Please verify your email before signing in.")
                 .build();
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PostMapping("/login")
-    @Operation(summary = "Login and get a custom token", 
-               description = "Returns a Firebase custom token. Exchange it for an ID token using Firebase REST API.")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+    // @PostMapping("/login")
+    // @Operation(summary = "Login and get a custom token", description = "Returns a
+    // Firebase custom token. Exchange it for an ID token using Firebase REST API.")
+    // public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest
+    // request) {
 
-        String customToken = userService.createCustomToken(request.getEmail());
+    // String customToken = userService.createCustomToken(request.getEmail());
 
-        AuthResponse response = AuthResponse.builder()
-                .idToken(customToken)
-                .message("Login successful. Use this custom token to get an ID token from Firebase.")
-                .build();
+    // AuthResponse response = AuthResponse.builder()
+    // .idToken(customToken)
+    // .message("Login successful. Use this custom token to get an ID token from
+    // Firebase.")
+    // .build();
 
-        return ResponseEntity.ok(response);
-    }
+    // return ResponseEntity.ok(response);
+    // }
 
     @GetMapping("/me")
     @Operation(summary = "Get current user profile")

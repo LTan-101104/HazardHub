@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/lib/context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { AuthLayout } from '@/components/auth-component/AuthLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

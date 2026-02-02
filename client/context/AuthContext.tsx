@@ -8,9 +8,20 @@ import {
     GoogleAuthProvider,
     signInWithPopup,
     sendPasswordResetEmail,
+    sendEmailVerification,
 } from 'firebase/auth';
+import axios from 'axios';
 import { auth } from '@/lib/firebase';
 import { User, AuthContextType, UserRegistration } from '@/types';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+const api = axios.create({
+    baseURL: API_URL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -25,18 +36,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 // Fetch user data from backend
                 try {
-                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+                    const response = await api.get('/auth/me', {
                         headers: {
-                            'Authorization': `Bearer ${idToken}`,
+                            Authorization: `Bearer ${idToken}`,
                         },
                     });
-
-                    if (response.ok) {
-                        const userData = await response.json();
-                        setUser(userData);
-                    }
+                    setUser(response.data);
                 } catch (error) {
                     console.error('Error fetching user data:', error);
+                    await firebaseSignOut(auth);
+                    setUser(null);
                 }
             } else {
                 setUser(null);
@@ -49,7 +58,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const signIn = async (email: string, password: string) => {
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+            // Check if email is verified
+            if (!userCredential.user.emailVerified) {
+                await firebaseSignOut(auth);
+                throw new Error('Please verify your email before signing in. Check your inbox for the verification link.');
+            }
+
+            const idToken = await userCredential.user.getIdToken();
+
+            // Fetch user data from backend and update state before returning
+            const response = await api.get('/auth/me', {
+                headers: {
+                    Authorization: `Bearer ${idToken}`,
+                },
+            });
+            setUser(response.data);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Sign in failed';
             throw new Error(errorMessage);
@@ -59,22 +84,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const signUp = async (data: UserRegistration) => {
         try {
             // Register with backend first
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
+            await api.post('/auth/register', data);
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Registration failed');
-            }
+            // Sign in to get the user credential, then send verification email
+            const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
 
-            // Then sign in
-            await signInWithEmailAndPassword(auth, data.email, data.password);
+            // Send email verification
+            await sendEmailVerification(userCredential.user);
+
+            // Sign out - user must verify email before they can sign in
+            await firebaseSignOut(auth);
+
+            // Don't set user - they need to verify email first
         } catch (error: unknown) {
+            if (axios.isAxiosError(error) && error.response) {
+                throw new Error(error.response.data.message || 'Registration failed');
+            }
             const errorMessage = error instanceof Error ? error.message : 'Registration failed';
             throw new Error(errorMessage);
         }
@@ -85,13 +110,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const provider = new GoogleAuthProvider();
             const result = await signInWithPopup(auth, provider);
 
-            // Create user in backend if doesn't exist
+            // Get token and fetch/create user in backend
             const idToken = await result.user.getIdToken();
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+            const response = await api.get('/auth/me', {
                 headers: {
-                    'Authorization': `Bearer ${idToken}`,
+                    Authorization: `Bearer ${idToken}`,
                 },
             });
+            setUser(response.data);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Google sign in failed';
             throw new Error(errorMessage);
@@ -116,6 +142,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const resendVerificationEmail = async (email: string, password: string) => {
+        try {
+            // Sign in temporarily to get the user
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+            if (userCredential.user.emailVerified) {
+                await firebaseSignOut(auth);
+                throw new Error('Email is already verified. You can sign in now.');
+            }
+
+            // Send verification email
+            await sendEmailVerification(userCredential.user);
+
+            // Sign out again
+            await firebaseSignOut(auth);
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to send verification email';
+            throw new Error(errorMessage);
+        }
+    };
+
     const value: AuthContextType = {
         user,
         loading,
@@ -124,6 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signInWithGoogle,
         signOut,
         forgotPassword,
+        resendVerificationEmail,
     };
 
     return (

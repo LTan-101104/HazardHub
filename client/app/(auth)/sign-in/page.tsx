@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/lib/context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { AuthLayout } from '@/components/auth-component/AuthLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,22 +12,51 @@ import { Label } from '@/components/ui/label';
 
 export default function SignIn() {
     const router = useRouter();
-    const { signIn, signInWithGoogle } = useAuth();
+    const { signIn, signInWithGoogle, resendVerificationEmail } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showResendOption, setShowResendOption] = useState(false);
+    const [resendSuccess, setResendSuccess] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setShowResendOption(false);
+        setResendSuccess(false);
         setLoading(true);
 
         try {
             await signIn(email, password);
             router.push('/map');
         } catch (error: any) {
-            setError(error.message || 'Failed to sign in');
+            const errorMessage = error.message || 'Failed to sign in';
+            setError(errorMessage);
+            // Check if error is about email verification
+            if (errorMessage.toLowerCase().includes('verify your email')) {
+                setShowResendOption(true);
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResendVerification = async () => {
+        if (!email || !password) {
+            setError('Please enter your email and password to resend verification');
+            return;
+        }
+
+        setLoading(true);
+        setError('');
+
+        try {
+            await resendVerificationEmail(email, password);
+            setResendSuccess(true);
+            setShowResendOption(false);
+        } catch (error: any) {
+            setError(error.message || 'Failed to resend verification email');
         } finally {
             setLoading(false);
         }
@@ -85,6 +114,22 @@ export default function SignIn() {
                 {error && (
                     <div className="p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-400 text-sm">
                         {error}
+                        {showResendOption && (
+                            <button
+                                type="button"
+                                onClick={handleResendVerification}
+                                disabled={loading}
+                                className="block mt-2 text-[#ff8c00] hover:underline cursor-pointer"
+                            >
+                                Resend verification email
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                {resendSuccess && (
+                    <div className="p-3 bg-green-500/20 border border-green-500 rounded-lg text-green-400 text-sm">
+                        Verification email sent! Check your inbox and click the link to verify your account.
                     </div>
                 )}
 

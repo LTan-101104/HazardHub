@@ -28,7 +28,9 @@ public class UserService {
         log.info("Registering new user with email: {}", request.getEmail());
 
         try {
-            // Create user in Firebase Authentication
+            // Create user in Firebase Authentication only
+            // User will be stored in Firestore after email verification (on first /auth/me
+            // call)
             UserRecord.CreateRequest createRequest = new UserRecord.CreateRequest()
                     .setEmail(request.getEmail())
                     .setPassword(request.getPassword())
@@ -45,17 +47,17 @@ public class UserService {
 
             UserRecord userRecord = FirebaseAuth.getInstance().createUser(createRequest);
 
-            // Create user document in Firestore
+            // Don't store in Firestore yet - wait for email verification
+            // Return a response with the user info (but not persisted)
             User user = User.builder()
                     .email(request.getEmail())
                     .displayName(request.getDisplayName())
                     .phone(request.getPhone())
                     .build();
-
-            firestoreService.setDocument(COLLECTION_NAME, userRecord.getUid(), user);
             user.setId(userRecord.getUid());
 
-            log.info("User registered successfully with UID: {}", userRecord.getUid());
+            log.info("User registered in Firebase Auth with UID: {}. Awaiting email verification.",
+                    userRecord.getUid());
             return mapToResponseDTO(user);
 
         } catch (FirebaseAuthException e) {
@@ -68,8 +70,27 @@ public class UserService {
         log.info("Fetching user with UID: {}", uid);
 
         User user = firestoreService.getDocument(COLLECTION_NAME, uid, User.class);
+
         if (user == null) {
-            throw new ResourceNotFoundException("User not found with id: " + uid);
+            // User doesn't exist in Firestore yet - this happens after email verification
+            // Try to get user from Firebase Auth and create Firestore document
+            try {
+                UserRecord userRecord = FirebaseAuth.getInstance().getUser(uid);
+
+                // Create user document in Firestore (lazy creation after verification)
+                user = User.builder()
+                        .email(userRecord.getEmail())
+                        .displayName(userRecord.getDisplayName())
+                        .phone(userRecord.getPhoneNumber())
+                        .build();
+
+                firestoreService.setDocument(COLLECTION_NAME, uid, user);
+                log.info("Created Firestore document for verified user: {}", uid);
+
+            } catch (FirebaseAuthException e) {
+                log.error("User not found in Firebase Auth: {}", uid);
+                throw new ResourceNotFoundException("User not found with id: " + uid);
+            }
         }
 
         user.setId(uid);
@@ -94,6 +115,9 @@ public class UserService {
             user.setInsuranceDispatchConfig(updates.getInsuranceDispatchConfig());
         }
 
+        // Clear updatedAt so Firestore sets a new server timestamp on save
+        user.setUpdatedAt(null);
+
         firestoreService.setDocument(COLLECTION_NAME, uid, user);
         user.setId(uid);
 
@@ -104,19 +128,20 @@ public class UserService {
      * Generate a custom token for a user by email.
      * The client can exchange this for an ID token using Firebase REST API.
      */
-    public String createCustomToken(String email) {
-        // this method assumes the user already exists in firebase authentication
-        // only used in dev / testing environments
-        try {
-            UserRecord userRecord = FirebaseAuth.getInstance().getUserByEmail(email);
-            String customToken = FirebaseAuth.getInstance().createCustomToken(userRecord.getUid());
-            log.info("Created custom token for user: {}", email);
-            return customToken;
-        } catch (FirebaseAuthException e) {
-            log.error("Failed to create custom token: {}", e.getMessage());
-            throw new BadRequestException("Invalid credentials or user not found");
-        }
-    }
+    // public String createCustomToken(String email) {
+    // // this method assumes the user already exists in firebase authentication
+    // // only used in dev / testing environments
+    // try {
+    // UserRecord userRecord = FirebaseAuth.getInstance().getUserByEmail(email);
+    // String customToken =
+    // FirebaseAuth.getInstance().createCustomToken(userRecord.getUid());
+    // log.info("Created custom token for user: {}", email);
+    // return customToken;
+    // } catch (FirebaseAuthException e) {
+    // log.error("Failed to create custom token: {}", e.getMessage());
+    // throw new BadRequestException("Invalid credentials or user not found");
+    // }
+    // }
 
     private UserResponse mapToResponseDTO(User user) {
         return UserResponse.builder()

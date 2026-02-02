@@ -15,6 +15,12 @@ export interface UserRegistration {
   phone?: string;
 }
 
+export interface UserProfileUpdate {
+  displayName?: string;
+  phone?: string | null;
+  insuranceDispatchConfig?: Record<string, unknown> | null;
+}
+
 export interface AuthResponse {
   idToken?: string;
   user: User;
@@ -24,9 +30,10 @@ export interface AuthResponse {
 export interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise;
-  signUp: (data: UserRegistration) => Promise;
-  signInWithGoogle: () => Promise;
-  signOut: () => Promise;
-  forgotPassword: (email: string) => Promise;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (data: UserRegistration) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signOut: () => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  resendVerificationEmail: (email: string, password: string) => Promise<void>;
 }
