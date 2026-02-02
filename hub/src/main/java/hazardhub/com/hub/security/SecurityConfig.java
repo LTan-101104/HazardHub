@@ -31,7 +31,30 @@ public class SecurityConfig {
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(auth -> auth
-                                                .anyRequest().permitAll());
+                                                // Public endpoints - no authentication required
+                                                .requestMatchers(
+                                                        "/api/v1/auth/register",
+                                                        "/api/v1/auth/login",
+                                                        "/api/health",
+                                                        "/swagger-ui/**",
+                                                        "/swagger-ui.html",
+                                                        "/v3/api-docs/**",
+                                                        "/v3/api-docs.yaml",
+                                                        "/swagger-resources/**",
+                                                        "/webjars/**",
+                                                        "/h2-console/**"
+                                                ).permitAll()
+                                                // All other endpoints require authentication
+                                                .anyRequest().authenticated()
+                                );
+
+                // Add Firebase auth filter for protected endpoints
+                if (firebaseAuthFilter != null) {
+                        http.addFilterBefore(firebaseAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                }
+
+                // Allow H2 console frames
+                http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
 
                 return http.build();
         }

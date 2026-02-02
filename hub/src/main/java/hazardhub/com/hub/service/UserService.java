@@ -100,6 +100,24 @@ public class UserService {
         return mapToResponseDTO(user);
     }
 
+    /**
+     * Generate a custom token for a user by email.
+     * The client can exchange this for an ID token using Firebase REST API.
+     */
+    public String createCustomToken(String email) {
+        // this method assumes the user already exists in firebase authentication
+        // only used in dev / testing environments
+        try {
+            UserRecord userRecord = FirebaseAuth.getInstance().getUserByEmail(email);
+            String customToken = FirebaseAuth.getInstance().createCustomToken(userRecord.getUid());
+            log.info("Created custom token for user: {}", email);
+            return customToken;
+        } catch (FirebaseAuthException e) {
+            log.error("Failed to create custom token: {}", e.getMessage());
+            throw new BadRequestException("Invalid credentials or user not found");
+        }
+    }
+
     private UserResponse mapToResponseDTO(User user) {
         return UserResponse.builder()
                 .id(user.getId())
