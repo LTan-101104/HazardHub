@@ -65,7 +65,7 @@ export async function updateUserProfile(idToken: string, data: UserProfileUpdate
  * Get the current user's ID token
  */
 export async function getIdToken(): Promise<string | null> {
-  const currentUser = auth.currentUser;
+  const currentUser = auth?.currentUser;
   if (!currentUser) {
     return null;
   }
