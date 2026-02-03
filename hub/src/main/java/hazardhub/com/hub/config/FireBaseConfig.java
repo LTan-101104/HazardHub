@@ -8,11 +8,13 @@ import com.google.firebase.cloud.FirestoreClient;
 import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 @Configuration
+@Profile("!test")
 public class FireBaseConfig {
 
     @PostConstruct
@@ -21,6 +23,12 @@ public class FireBaseConfig {
             InputStream serviceAccount = getClass()
                     .getClassLoader()
                     .getResourceAsStream("firebase-service-account.json");
+
+            if (serviceAccount == null) {
+                throw new RuntimeException(
+                        "Firebase service account file not found. " +
+                                "Please place 'firebase-service-account.json' in src/main/resources/");
+            }
 
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
