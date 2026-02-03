@@ -1,5 +1,6 @@
 package hazardhub.com.hub.service.impl;
 
+import hazardhub.com.hub.constants.HazardHubConstants;
 import hazardhub.com.hub.exception.ResourceNotFoundException;
 import hazardhub.com.hub.mapper.HazardMapper;
 import hazardhub.com.hub.model.dto.HazardDTO;
@@ -39,7 +40,7 @@ public class HazardServiceImpl implements HazardService {
             hazard.setDisputeCount(0);
         }
         if (hazard.getAffectedRadiusMeters() == null) {
-            hazard.setAffectedRadiusMeters(50.0);
+            hazard.setAffectedRadiusMeters(HazardHubConstants.Hazard.DEFAULT_AFFECTED_RADIUS_METERS);
         }
         Hazard res = hazardRepository.save(hazard);
         return HazardMapper.toDTO(res);
