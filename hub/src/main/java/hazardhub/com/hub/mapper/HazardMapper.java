@@ -26,11 +26,8 @@ public final class HazardMapper {
                 .verificationCount(dto.getVerificationCount())
                 .disputeCount(dto.getDisputeCount())
                 .disabledAt(dto.getDisabledAt())
-                .affectedRadiusMeters(dto.getAffectedRadiusMeters());
-
-        if (dto.getLongitude() != null && dto.getLatitude() != null) {
-            builder.location(new GeoJsonPoint(dto.getLongitude(), dto.getLatitude()));
-        }
+                .affectedRadiusMeters(dto.getAffectedRadiusMeters())
+                .location(new GeoJsonPoint(dto.getLongitude(), dto.getLatitude()));
 
         return builder.build();
     }
@@ -53,12 +50,9 @@ public final class HazardMapper {
                 .verificationCount(entity.getVerificationCount())
                 .disputeCount(entity.getDisputeCount())
                 .disabledAt(entity.getDisabledAt())
-                .affectedRadiusMeters(entity.getAffectedRadiusMeters());
-
-        if (entity.getLocation() != null) {
-            builder.longitude(entity.getLocation().getX());
-            builder.latitude(entity.getLocation().getY());
-        }
+                .affectedRadiusMeters(entity.getAffectedRadiusMeters())
+                .longitude(entity.getLocation().getX())
+                .latitude(entity.getLocation().getY());
 
         return builder.build();
     }
@@ -68,27 +62,19 @@ public final class HazardMapper {
             return;
         }
 
-        if (dto.getReporterId() != null) {
-            entity.setReporterId(dto.getReporterId());
-        }
+        entity.setReporterId(dto.getReporterId());
         if (dto.getExpiresAt() != null) {
             entity.setExpiresAt(dto.getExpiresAt());
         }
-        if (dto.getLongitude() != null && dto.getLatitude() != null) {
-            entity.setLocation(new GeoJsonPoint(dto.getLongitude(), dto.getLatitude()));
-        }
+        entity.setLocation(new GeoJsonPoint(dto.getLongitude(), dto.getLatitude()));
         if (dto.getLocationAccuracyMeters() != null) {
             entity.setLocationAccuracyMeters(dto.getLocationAccuracyMeters());
         }
         if (dto.getAddress() != null) {
             entity.setAddress(dto.getAddress());
         }
-        if (dto.getSeverity() != null) {
-            entity.setSeverity(dto.getSeverity());
-        }
-        if (dto.getDescription() != null) {
-            entity.setDescription(dto.getDescription());
-        }
+        entity.setSeverity(dto.getSeverity());
+        entity.setDescription(dto.getDescription());
         if (dto.getImageUrl() != null) {
             entity.setImageUrl(dto.getImageUrl());
         }

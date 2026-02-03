@@ -6,6 +6,7 @@ import hazardhub.com.hub.model.enums.HazardStatus;
 import hazardhub.com.hub.service.HazardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,7 +27,7 @@ public class HazardController {
 
     @PostMapping
     @Operation(summary = "Create a new hazard report")
-    public ResponseEntity<Hazard> create(@RequestBody HazardDTO hazardDTO) {
+    public ResponseEntity<Hazard> create(@Valid @RequestBody HazardDTO hazardDTO) {
         Hazard created = hazardService.create(hazardDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -56,7 +57,7 @@ public class HazardController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing hazard")
-    public ResponseEntity<Hazard> update(@PathVariable String id, @RequestBody HazardDTO hazardDTO) {
+    public ResponseEntity<Hazard> update(@PathVariable String id, @Valid @RequestBody HazardDTO hazardDTO) {
         Hazard updated = hazardService.update(id, hazardDTO);
         return ResponseEntity.ok(updated);
     }
