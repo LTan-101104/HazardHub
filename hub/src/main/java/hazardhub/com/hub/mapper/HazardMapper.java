@@ -5,9 +5,10 @@ import hazardhub.com.hub.model.entity.Hazard;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.stereotype.Component;
 
-@Component
 public final class HazardMapper {
-
+    /*
+    * Map HazardDTO to Entity, ignore id of dto so id from hazard will be automatically created when saved
+    * */
     public static Hazard toEntity(HazardDTO dto) {
         if (dto == null) {
             return null;
@@ -26,21 +27,22 @@ public final class HazardMapper {
                 .verificationCount(dto.getVerificationCount())
                 .disputeCount(dto.getDisputeCount())
                 .disabledAt(dto.getDisabledAt())
-                .affectedRadiusMeters(dto.getAffectedRadiusMeters());
-
-        if (dto.getLongitude() != null && dto.getLatitude() != null) {
-            builder.location(new GeoJsonPoint(dto.getLongitude(), dto.getLatitude()));
-        }
+                .affectedRadiusMeters(dto.getAffectedRadiusMeters())
+                .location(new GeoJsonPoint(dto.getLongitude(), dto.getLatitude()));
 
         return builder.build();
     }
 
+    /*
+    * Map dto to entity
+    * */
     public static HazardDTO toDTO(Hazard entity) {
         if (entity == null) {
             return null;
         }
 
         HazardDTO.HazardDTOBuilder builder = HazardDTO.builder()
+                .id(entity.getId())
                 .reporterId(entity.getReporterId())
                 .expiresAt(entity.getExpiresAt())
                 .locationAccuracyMeters(entity.getLocationAccuracyMeters())
@@ -53,17 +55,17 @@ public final class HazardMapper {
                 .verificationCount(entity.getVerificationCount())
                 .disputeCount(entity.getDisputeCount())
                 .disabledAt(entity.getDisabledAt())
-                .affectedRadiusMeters(entity.getAffectedRadiusMeters());
-
-        if (entity.getLocation() != null) {
-            builder.longitude(entity.getLocation().getX());
-            builder.latitude(entity.getLocation().getY());
-        }
+                .affectedRadiusMeters(entity.getAffectedRadiusMeters())
+                .longitude(entity.getLocation().getX())
+                .latitude(entity.getLocation().getY());
 
         return builder.build();
     }
 
-    public void updateEntityFromDTO(HazardDTO dto, Hazard entity) {
+    /*
+    * update entity based on dto, no override of entity's id is allowed
+    * */
+    public static void updateEntityFromDTO(HazardDTO dto, Hazard entity) {
         if (dto == null || entity == null) {
             return;
         }

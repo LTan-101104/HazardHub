@@ -1,11 +1,14 @@
 package hazardhub.com.hub.service.impl;
 
+import hazardhub.com.hub.constants.HazardHubConstants;
+import hazardhub.com.hub.exception.ResourceNotFoundException;
 import hazardhub.com.hub.mapper.HazardMapper;
 import hazardhub.com.hub.model.dto.HazardDTO;
 import hazardhub.com.hub.model.entity.Hazard;
 import hazardhub.com.hub.model.enums.HazardStatus;
 import hazardhub.com.hub.repository.HazardRepository;
 import hazardhub.com.hub.service.HazardService;
+import hazardhub.com.hub.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,10 +23,10 @@ import java.util.Optional;
 public class HazardServiceImpl implements HazardService {
 
     private final HazardRepository hazardRepository;
-    private final HazardMapper hazardMapper;
+    private final UserService userService;
 
     @Override
-    public Hazard create(HazardDTO hazardDTO) {
+    public HazardDTO create(HazardDTO hazardDTO) {
         Hazard hazard = HazardMapper.toEntity(hazardDTO);
         if (hazard.getStatus() == null) {
             hazard.setStatus(HazardStatus.PENDING);
@@ -35,63 +38,90 @@ public class HazardServiceImpl implements HazardService {
             hazard.setDisputeCount(0);
         }
         if (hazard.getAffectedRadiusMeters() == null) {
-            hazard.setAffectedRadiusMeters(50.0);
+            hazard.setAffectedRadiusMeters(HazardHubConstants.Hazard.DEFAULT_AFFECTED_RADIUS_METERS);
         }
-        return hazardRepository.save(hazard);
+        Hazard res = hazardRepository.save(hazard);
+        return HazardMapper.toDTO(res);
     }
 
     @Override
-    public Optional<Hazard> findById(String id) {
-        return hazardRepository.findById(id);
+    public Optional<HazardDTO> findById(String id) {
+        return hazardRepository.findById(id)
+                .map(HazardMapper::toDTO);
     }
 
     @Override
-    public List<Hazard> findAll() {
-        return hazardRepository.findAll();
+    public List<HazardDTO> findAll() {
+        return hazardRepository.findAll().stream()
+                .map(HazardMapper::toDTO)
+                .toList();
     }
 
     @Override
-    public Page<Hazard> findAll(Pageable pageable) {
-        return hazardRepository.findAll(pageable);
+    public Page<HazardDTO> findAll(Pageable pageable) {
+        return hazardRepository.findAll(pageable)
+                .map(HazardMapper::toDTO);
     }
 
     @Override
-    public Hazard update(String id, HazardDTO hazardDTO) {
+    public HazardDTO update(String id, HazardDTO hazardDTO) {
         Hazard existingHazard = hazardRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Hazard not found with id: " + id));
-        hazardMapper.updateEntityFromDTO(hazardDTO, existingHazard);
-        return hazardRepository.save(existingHazard);
+                .orElseThrow(() -> new ResourceNotFoundException("Hazard not found with id: " + id));
+        HazardMapper.updateEntityFromDTO(hazardDTO, existingHazard);
+        Hazard updated = hazardRepository.save(existingHazard);
+        return HazardMapper.toDTO(updated);
     }
 
     @Override
     public void delete(String id) {
+        if (!hazardRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Hazard not found with id: " + id);
+        }
         hazardRepository.deleteById(id);
     }
 
     @Override
-    public List<Hazard> findByReporterId(String reporterId) {
-        return hazardRepository.findByReporterId(reporterId);
+    public List<HazardDTO> findByReporterId(String reporterId) {
+        try {
+            if (!userService.existsById(reporterId)) {
+                throw new ResourceNotFoundException("User not found with id: " + reporterId);
+            }
+        } catch (ResourceNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to verify user existence", e);
+        }
+        return hazardRepository.findByReporterId(reporterId).stream()
+                .map(HazardMapper::toDTO)
+                .toList();
     }
 
     @Override
-    public List<Hazard> findByStatus(HazardStatus status) {
-        return hazardRepository.findByStatus(status);
+    public List<HazardDTO> findByStatus(HazardStatus status) {
+        return hazardRepository.findByStatus(status).stream()
+                .map(HazardMapper::toDTO)
+                .toList();
     }
 
     @Override
-    public Page<Hazard> findByStatus(HazardStatus status, Pageable pageable) {
-        return hazardRepository.findByStatus(status, pageable);
+    public Page<HazardDTO> findByStatus(HazardStatus status, Pageable pageable) {
+        return hazardRepository.findByStatus(status, pageable)
+                .map(HazardMapper::toDTO);
     }
 
     @Override
-    public List<Hazard> findNearby(double longitude, double latitude, double maxDistanceMeters) {
+    public List<HazardDTO> findNearby(double longitude, double latitude, double maxDistanceMeters) {
         GeoJsonPoint point = new GeoJsonPoint(longitude, latitude);
-        return hazardRepository.findByLocationNear(point, maxDistanceMeters);
+        return hazardRepository.findByLocationNear(point, maxDistanceMeters).stream()
+                .map(HazardMapper::toDTO)
+                .toList();
     }
 
     @Override
-    public List<Hazard> findNearbyActive(double longitude, double latitude, double maxDistanceMeters) {
+    public List<HazardDTO> findNearbyActive(double longitude, double latitude, double maxDistanceMeters) {
         GeoJsonPoint point = new GeoJsonPoint(longitude, latitude);
-        return hazardRepository.findByLocationNearAndStatus(point, maxDistanceMeters, HazardStatus.ACTIVE);
+        return hazardRepository.findByLocationNearAndStatus(point, maxDistanceMeters, HazardStatus.ACTIVE).stream()
+                .map(HazardMapper::toDTO)
+                .toList();
     }
 }

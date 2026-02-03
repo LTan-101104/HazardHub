@@ -30,6 +30,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!auth) {
+            setLoading(false);
+            return;
+        }
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
                 const idToken = await firebaseUser.getIdToken();
@@ -44,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setUser(response.data);
                 } catch (error) {
                     console.error('Error fetching user data:', error);
-                    await firebaseSignOut(auth);
+                    if (auth) await firebaseSignOut(auth);
                     setUser(null);
                 }
             } else {
@@ -56,13 +60,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return () => unsubscribe();
     }, []);
 
+    const requireAuth = () => {
+        if (!auth) throw new Error('Firebase is not configured. Set NEXT_PUBLIC_FIREBASE_API_KEY in .env.local.');
+        return auth;
+    };
+
     const signIn = async (email: string, password: string) => {
         try {
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const firebaseAuth = requireAuth();
+            const userCredential = await signInWithEmailAndPassword(firebaseAuth, email, password);
 
             // Check if email is verified
             if (!userCredential.user.emailVerified) {
-                await firebaseSignOut(auth);
+                await firebaseSignOut(firebaseAuth);
                 throw new Error('Please verify your email before signing in. Check your inbox for the verification link.');
             }
 
@@ -83,17 +93,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const signUp = async (data: UserRegistration) => {
         try {
+            const firebaseAuth = requireAuth();
             // Register with backend first
             await api.post('/auth/register', data);
 
             // Sign in to get the user credential, then send verification email
-            const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
+            const userCredential = await signInWithEmailAndPassword(firebaseAuth, data.email, data.password);
 
             // Send email verification
             await sendEmailVerification(userCredential.user);
 
             // Sign out - user must verify email before they can sign in
-            await firebaseSignOut(auth);
+            await firebaseSignOut(firebaseAuth);
 
             // Don't set user - they need to verify email first
         } catch (error: unknown) {
@@ -107,8 +118,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const signInWithGoogle = async () => {
         try {
+            const firebaseAuth = requireAuth();
             const provider = new GoogleAuthProvider();
-            const result = await signInWithPopup(auth, provider);
+            const result = await signInWithPopup(firebaseAuth, provider);
 
             // Get token and fetch/create user in backend
             const idToken = await result.user.getIdToken();
@@ -126,7 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const signOut = async () => {
         try {
-            await firebaseSignOut(auth);
+            await firebaseSignOut(requireAuth());
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Sign out failed';
             throw new Error(errorMessage);
@@ -135,7 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const forgotPassword = async (email: string) => {
         try {
-            await sendPasswordResetEmail(auth, email);
+            await sendPasswordResetEmail(requireAuth(), email);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Failed to send reset email';
             throw new Error(errorMessage);
@@ -144,11 +156,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const resendVerificationEmail = async (email: string, password: string) => {
         try {
+            const firebaseAuth = requireAuth();
             // Sign in temporarily to get the user
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const userCredential = await signInWithEmailAndPassword(firebaseAuth, email, password);
 
             if (userCredential.user.emailVerified) {
-                await firebaseSignOut(auth);
+                await firebaseSignOut(firebaseAuth);
                 throw new Error('Email is already verified. You can sign in now.');
             }
 
@@ -156,7 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await sendEmailVerification(userCredential.user);
 
             // Sign out again
-            await firebaseSignOut(auth);
+            await firebaseSignOut(firebaseAuth);
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Failed to send verification email';
             throw new Error(errorMessage);
