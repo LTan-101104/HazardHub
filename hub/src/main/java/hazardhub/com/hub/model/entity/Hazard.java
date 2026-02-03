@@ -17,7 +17,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.Instant;
 
-//TODO: need some sort of mechanism to differentiate hazard other than id, what if user not approves the hazard and just create the new same hazard?
 @Data
 @SuperBuilder
 @NoArgsConstructor
