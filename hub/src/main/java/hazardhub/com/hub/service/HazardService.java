@@ -1,5 +1,6 @@
 package hazardhub.com.hub.service;
 
+import hazardhub.com.hub.model.dto.HazardDTO;
 import hazardhub.com.hub.model.entity.Hazard;
 import hazardhub.com.hub.model.enums.HazardStatus;
 import org.springframework.data.domain.Page;
@@ -10,7 +11,7 @@ import java.util.Optional;
 
 public interface HazardService {
 
-    Hazard create(Hazard hazard);
+    Hazard create(HazardDTO hazardDTO);
 
     Optional<Hazard> findById(String id);
 
@@ -18,7 +19,7 @@ public interface HazardService {
 
     Page<Hazard> findAll(Pageable pageable);
 
-    Hazard update(String id, Hazard hazard);
+    Hazard update(String id, HazardDTO hazardDTO);
 
     void delete(String id);
 
