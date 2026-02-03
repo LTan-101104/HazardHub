@@ -1,5 +1,5 @@
-import { MapClient } from './(dashboard)/map/_components/map-client';
+import { redirect } from 'next/navigation';
 
 export default function Home() {
-  return <MapClient />;
+  redirect('/map');
 }

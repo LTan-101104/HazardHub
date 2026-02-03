@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(false);
+  const [matches, setMatches] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {
     const media = window.matchMedia(query);
@@ -13,7 +13,8 @@ export function useMediaQuery(query: string): boolean {
     return () => media.removeEventListener('change', listener);
   }, [query]);
 
-  return matches;
+  // Return false during SSR and initial hydration to prevent mismatch
+  return matches ?? false;
 }
 
 export function useIsDesktop(): boolean {

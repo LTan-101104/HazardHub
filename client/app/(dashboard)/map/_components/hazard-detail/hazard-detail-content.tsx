@@ -1,6 +1,6 @@
 'use client';
 
-import { X, Clock, Users, Sparkles } from 'lucide-react';
+import { X, Clock, Users } from 'lucide-react';
 import { useMap } from '../map-provider';
 import { GeminiSuggestion } from './gemini-suggestion';
 import { HazardActions } from './hazard-actions';

@@ -17,7 +17,6 @@ import { NavigationBar } from './navigation/navigation-bar';
 import { useIsDesktop } from '@/lib/hooks/use-media-query';
 import {
   MOCK_ROUTES,
-  MOCK_HAZARDS,
   MOCK_CHAT_MESSAGES,
   MOCK_TURN_INSTRUCTION,
 } from '@/lib/constants/map-config';
@@ -34,8 +33,7 @@ function MapLayout() {
     MOCK_CHAT_MESSAGES.forEach((msg) => {
       dispatch({ type: 'ADD_CHAT_MESSAGE', payload: msg });
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dispatch]);
 
   const showNavigationUI = state.viewState === 'navigating';
   const showBrowseOverlays = state.viewState !== 'navigating';

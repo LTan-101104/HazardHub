@@ -45,15 +45,15 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 
-  /* Map-specific theme colors */
-  --color-nav-green: var(--color-nav-green);
-  --color-gemini-blue: var(--color-gemini-blue);
-  --color-safety-high: var(--color-safety-high);
-  --color-hazard-card: var(--color-hazard-card);
-  --color-hazard-border: var(--color-hazard-border);
-  --color-hazard-surface: var(--color-hazard-surface);
-  --color-hazard-muted: var(--color-hazard-muted);
-  --color-hazard-warning-bg: var(--color-hazard-warning-bg);
+  /* Map-specific theme colors - defined in .dark selector below */
+  --color-nav-green: var(--nav-green);
+  --color-gemini-blue: var(--gemini-blue);
+  --color-safety-high: var(--safety-high);
+  --color-hazard-card: var(--hazard-card);
+  --color-hazard-border: var(--hazard-border);
+  --color-hazard-surface: var(--hazard-surface);
+  --color-hazard-muted: var(--hazard-muted);
+  --color-hazard-warning-bg: var(--hazard-warning-bg);
 }
 
 :root {
@@ -130,16 +130,16 @@
   --color-hazard-dark: #1a1a1a;
 
   /* Map-specific semantic colors */
-  --color-nav-green: #00AA66;
-  --color-nav-green-foreground: #FFFFFF;
-  --color-gemini-blue: #4285F4;
-  --color-gemini-blue-foreground: #FFFFFF;
-  --color-safety-high: #22C55E;
-  --color-hazard-card: #1A1A1A;
-  --color-hazard-border: #2E2E2E;
-  --color-hazard-surface: #2E2E2E;
-  --color-hazard-muted: #B8B9B6;
-  --color-hazard-warning-bg: #291C0F;
+  --nav-green: #00AA66;
+  --nav-green-foreground: #FFFFFF;
+  --gemini-blue: #4285F4;
+  --gemini-blue-foreground: #FFFFFF;
+  --safety-high: #22C55E;
+  --hazard-card: #1A1A1A;
+  --hazard-border: #2E2E2E;
+  --hazard-surface: #2E2E2E;
+  --hazard-muted: #B8B9B6;
+  --hazard-warning-bg: #291C0F;
   --color-chat-user-bg: rgba(255, 132, 0, 0.15);
   --color-chat-ai-bg: #242424;
   
