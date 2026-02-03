@@ -22,6 +22,8 @@ import java.time.Instant;
 @AllArgsConstructor
 public class HazardDTO {
 
+    private String id;
+
     @NotBlank(message = "Reporter ID is required")
     private String reporterId;
 
@@ -37,6 +39,7 @@ public class HazardDTO {
     @DecimalMax(value = "90.0", message = "Latitude must be <= 90")
     private Double latitude;
 
+    @NotNull(message = "Location accuracy is required")
     @Positive(message = "Location accuracy must be positive")
     private Double locationAccuracyMeters;
 
@@ -62,6 +65,7 @@ public class HazardDTO {
 
     private Instant disabledAt;
 
+    @NotNull(message = "Affected radius is required")
     @Positive(message = "Affected radius must be positive")
     private Double affectedRadiusMeters;
 }

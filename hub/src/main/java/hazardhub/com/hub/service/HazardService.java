@@ -11,25 +11,25 @@ import java.util.Optional;
 
 public interface HazardService {
 
-    Hazard create(HazardDTO hazardDTO);
+    HazardDTO create(HazardDTO hazardDTO);
 
-    Optional<Hazard> findById(String id);
+    Optional<HazardDTO> findById(String id);
 
-    List<Hazard> findAll();
+    List<HazardDTO> findAll();
 
-    Page<Hazard> findAll(Pageable pageable);
+    Page<HazardDTO> findAll(Pageable pageable);
 
-    Hazard update(String id, HazardDTO hazardDTO);
+    HazardDTO update(String id, HazardDTO hazardDTO);
 
     void delete(String id);
 
-    List<Hazard> findByReporterId(String reporterId);
+    List<HazardDTO> findByReporterId(String reporterId);
 
-    List<Hazard> findByStatus(HazardStatus status);
+    List<HazardDTO> findByStatus(HazardStatus status);
 
-    Page<Hazard> findByStatus(HazardStatus status, Pageable pageable);
+    Page<HazardDTO> findByStatus(HazardStatus status, Pageable pageable);
 
-    List<Hazard> findNearby(double longitude, double latitude, double maxDistanceMeters);
+    List<HazardDTO> findNearby(double longitude, double latitude, double maxDistanceMeters);
 
-    List<Hazard> findNearbyActive(double longitude, double latitude, double maxDistanceMeters);
+    List<HazardDTO> findNearbyActive(double longitude, double latitude, double maxDistanceMeters);
 }

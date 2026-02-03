@@ -6,7 +6,9 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.stereotype.Component;
 
 public final class HazardMapper {
-
+    /*
+    * Map HazardDTO to Entity, ignore id of dto so id from hazard will be automatically created when saved
+    * */
     public static Hazard toEntity(HazardDTO dto) {
         if (dto == null) {
             return null;
@@ -31,12 +33,16 @@ public final class HazardMapper {
         return builder.build();
     }
 
+    /*
+    * Map dto to entity
+    * */
     public static HazardDTO toDTO(Hazard entity) {
         if (entity == null) {
             return null;
         }
 
         HazardDTO.HazardDTOBuilder builder = HazardDTO.builder()
+                .id(entity.getId())
                 .reporterId(entity.getReporterId())
                 .expiresAt(entity.getExpiresAt())
                 .locationAccuracyMeters(entity.getLocationAccuracyMeters())
@@ -56,24 +62,35 @@ public final class HazardMapper {
         return builder.build();
     }
 
+    /*
+    * update entity based on dto, no override of entity's id is allowed
+    * */
     public static void updateEntityFromDTO(HazardDTO dto, Hazard entity) {
         if (dto == null || entity == null) {
             return;
         }
 
-        entity.setReporterId(dto.getReporterId());
+        if (dto.getReporterId() != null) {
+            entity.setReporterId(dto.getReporterId());
+        }
         if (dto.getExpiresAt() != null) {
             entity.setExpiresAt(dto.getExpiresAt());
         }
-        entity.setLocation(new GeoJsonPoint(dto.getLongitude(), dto.getLatitude()));
+        if (dto.getLongitude() != null && dto.getLatitude() != null) {
+            entity.setLocation(new GeoJsonPoint(dto.getLongitude(), dto.getLatitude()));
+        }
         if (dto.getLocationAccuracyMeters() != null) {
             entity.setLocationAccuracyMeters(dto.getLocationAccuracyMeters());
         }
         if (dto.getAddress() != null) {
             entity.setAddress(dto.getAddress());
         }
-        entity.setSeverity(dto.getSeverity());
-        entity.setDescription(dto.getDescription());
+        if (dto.getSeverity() != null) {
+            entity.setSeverity(dto.getSeverity());
+        }
+        if (dto.getDescription() != null) {
+            entity.setDescription(dto.getDescription());
+        }
         if (dto.getImageUrl() != null) {
             entity.setImageUrl(dto.getImageUrl());
         }

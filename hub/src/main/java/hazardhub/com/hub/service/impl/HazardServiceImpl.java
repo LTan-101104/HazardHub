@@ -24,11 +24,10 @@ import java.util.Optional;
 public class HazardServiceImpl implements HazardService {
 
     private HazardRepository hazardRepository;
-    private HazardMapper hazardMapper;
     private UserService userService;
 
     @Override
-    public Hazard create(HazardDTO hazardDTO) {
+    public HazardDTO create(HazardDTO hazardDTO) {
         Hazard hazard = HazardMapper.toEntity(hazardDTO);
         if (hazard.getStatus() == null) {
             hazard.setStatus(HazardStatus.PENDING);
@@ -42,30 +41,36 @@ public class HazardServiceImpl implements HazardService {
         if (hazard.getAffectedRadiusMeters() == null) {
             hazard.setAffectedRadiusMeters(50.0);
         }
-        return hazardRepository.save(hazard);
+        Hazard res = hazardRepository.save(hazard);
+        return HazardMapper.toDTO(res);
     }
 
     @Override
-    public Optional<Hazard> findById(String id) {
-        return hazardRepository.findById(id);
+    public Optional<HazardDTO> findById(String id) {
+        return hazardRepository.findById(id)
+                .map(HazardMapper::toDTO);
     }
 
     @Override
-    public List<Hazard> findAll() {
-        return hazardRepository.findAll();
+    public List<HazardDTO> findAll() {
+        return hazardRepository.findAll().stream()
+                .map(HazardMapper::toDTO)
+                .toList();
     }
 
     @Override
-    public Page<Hazard> findAll(Pageable pageable) {
-        return hazardRepository.findAll(pageable);
+    public Page<HazardDTO> findAll(Pageable pageable) {
+        return hazardRepository.findAll(pageable)
+                .map(HazardMapper::toDTO);
     }
 
     @Override
-    public Hazard update(String id, HazardDTO hazardDTO) {
+    public HazardDTO update(String id, HazardDTO hazardDTO) {
         Hazard existingHazard = hazardRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Hazard not found with id: " + id));
-        hazardMapper.updateEntityFromDTO(hazardDTO, existingHazard);
-        return hazardRepository.save(existingHazard);
+        HazardMapper.updateEntityFromDTO(hazardDTO, existingHazard);
+        Hazard updated = hazardRepository.save(existingHazard);
+        return HazardMapper.toDTO(updated);
     }
 
     @Override
@@ -77,7 +82,7 @@ public class HazardServiceImpl implements HazardService {
     }
 
     @Override
-    public List<Hazard> findByReporterId(String reporterId) {
+    public List<HazardDTO> findByReporterId(String reporterId) {
         try {
             if (!userService.existsById(reporterId)) {
                 throw new ResourceNotFoundException("User not found with id: " + reporterId);
@@ -87,28 +92,37 @@ public class HazardServiceImpl implements HazardService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to verify user existence", e);
         }
-        return hazardRepository.findByReporterId(reporterId);
+        return hazardRepository.findByReporterId(reporterId).stream()
+                .map(HazardMapper::toDTO)
+                .toList();
     }
 
     @Override
-    public List<Hazard> findByStatus(HazardStatus status) {
-        return hazardRepository.findByStatus(status);
+    public List<HazardDTO> findByStatus(HazardStatus status) {
+        return hazardRepository.findByStatus(status).stream()
+                .map(HazardMapper::toDTO)
+                .toList();
     }
 
     @Override
-    public Page<Hazard> findByStatus(HazardStatus status, Pageable pageable) {
-        return hazardRepository.findByStatus(status, pageable);
+    public Page<HazardDTO> findByStatus(HazardStatus status, Pageable pageable) {
+        return hazardRepository.findByStatus(status, pageable)
+                .map(HazardMapper::toDTO);
     }
 
     @Override
-    public List<Hazard> findNearby(double longitude, double latitude, double maxDistanceMeters) {
+    public List<HazardDTO> findNearby(double longitude, double latitude, double maxDistanceMeters) {
         GeoJsonPoint point = new GeoJsonPoint(longitude, latitude);
-        return hazardRepository.findByLocationNear(point, maxDistanceMeters);
+        return hazardRepository.findByLocationNear(point, maxDistanceMeters).stream()
+                .map(HazardMapper::toDTO)
+                .toList();
     }
 
     @Override
-    public List<Hazard> findNearbyActive(double longitude, double latitude, double maxDistanceMeters) {
+    public List<HazardDTO> findNearbyActive(double longitude, double latitude, double maxDistanceMeters) {
         GeoJsonPoint point = new GeoJsonPoint(longitude, latitude);
-        return hazardRepository.findByLocationNearAndStatus(point, maxDistanceMeters, HazardStatus.ACTIVE);
+        return hazardRepository.findByLocationNearAndStatus(point, maxDistanceMeters, HazardStatus.ACTIVE).stream()
+                .map(HazardMapper::toDTO)
+                .toList();
     }
 }
