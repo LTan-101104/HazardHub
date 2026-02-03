@@ -5,7 +5,6 @@ import hazardhub.com.hub.model.entity.Hazard;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.stereotype.Component;
 
-@Component
 public final class HazardMapper {
 
     public static Hazard toEntity(HazardDTO dto) {
@@ -57,7 +56,7 @@ public final class HazardMapper {
         return builder.build();
     }
 
-    public void updateEntityFromDTO(HazardDTO dto, Hazard entity) {
+    public static void updateEntityFromDTO(HazardDTO dto, Hazard entity) {
         if (dto == null || entity == null) {
             return;
         }
