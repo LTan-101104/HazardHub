@@ -1,11 +1,14 @@
 package hazardhub.com.hub.service.impl;
 
+import hazardhub.com.hub.exception.ResourceNotFoundException;
 import hazardhub.com.hub.mapper.HazardMapper;
 import hazardhub.com.hub.model.dto.HazardDTO;
 import hazardhub.com.hub.model.entity.Hazard;
 import hazardhub.com.hub.model.enums.HazardStatus;
 import hazardhub.com.hub.repository.HazardRepository;
 import hazardhub.com.hub.service.HazardService;
+import hazardhub.com.hub.service.UserService;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,10 +20,12 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@AllArgsConstructor
 public class HazardServiceImpl implements HazardService {
 
-    private final HazardRepository hazardRepository;
-    private final HazardMapper hazardMapper;
+    private HazardRepository hazardRepository;
+    private HazardMapper hazardMapper;
+    private UserService userService;
 
     @Override
     public Hazard create(HazardDTO hazardDTO) {
@@ -58,18 +63,30 @@ public class HazardServiceImpl implements HazardService {
     @Override
     public Hazard update(String id, HazardDTO hazardDTO) {
         Hazard existingHazard = hazardRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Hazard not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Hazard not found with id: " + id));
         hazardMapper.updateEntityFromDTO(hazardDTO, existingHazard);
         return hazardRepository.save(existingHazard);
     }
 
     @Override
     public void delete(String id) {
+        if (!hazardRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Hazard not found with id: " + id);
+        }
         hazardRepository.deleteById(id);
     }
 
     @Override
     public List<Hazard> findByReporterId(String reporterId) {
+        try {
+            if (!userService.existsById(reporterId)) {
+                throw new ResourceNotFoundException("User not found with id: " + reporterId);
+            }
+        } catch (ResourceNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to verify user existence", e);
+        }
         return hazardRepository.findByReporterId(reporterId);
     }
 

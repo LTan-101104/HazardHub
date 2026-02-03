@@ -7,8 +7,11 @@ import hazardhub.com.hub.service.HazardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -98,18 +101,18 @@ public class HazardController {
     @GetMapping("/nearby")
     @Operation(summary = "Find hazards near a location")
     public ResponseEntity<List<Hazard>> findNearby(
-            @RequestParam double longitude,
-            @RequestParam double latitude,
-            @RequestParam double maxDistanceMeters) {
+            @RequestParam @DecimalMin("-180.0") @DecimalMax("180.0") double longitude,
+            @RequestParam @DecimalMin("-90.0") @DecimalMax("90.0") double latitude,
+            @RequestParam @Positive double maxDistanceMeters) {
         return ResponseEntity.ok(hazardService.findNearby(longitude, latitude, maxDistanceMeters));
     }
 
     @GetMapping("/nearby/active")
     @Operation(summary = "Find active hazards near a location")
     public ResponseEntity<List<Hazard>> findNearbyActive(
-            @RequestParam double longitude,
-            @RequestParam double latitude,
-            @RequestParam double maxDistanceMeters) {
+            @RequestParam @DecimalMin("-180.0") @DecimalMax("180.0") double longitude,
+            @RequestParam @DecimalMin("-90.0") @DecimalMax("90.0") double latitude,
+            @RequestParam @Positive double maxDistanceMeters) {
         return ResponseEntity.ok(hazardService.findNearbyActive(longitude, latitude, maxDistanceMeters));
     }
 }
