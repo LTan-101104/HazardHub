@@ -9,7 +9,6 @@ import hazardhub.com.hub.model.enums.HazardStatus;
 import hazardhub.com.hub.repository.HazardRepository;
 import hazardhub.com.hub.service.HazardService;
 import hazardhub.com.hub.service.UserService;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,11 +20,10 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@AllArgsConstructor
 public class HazardServiceImpl implements HazardService {
 
-    private HazardRepository hazardRepository;
-    private UserService userService;
+    private final HazardRepository hazardRepository;
+    private final UserService userService;
 
     @Override
     public HazardDTO create(HazardDTO hazardDTO) {
