@@ -7,12 +7,15 @@ import hazardhub.com.hub.service.HazardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/hazards")
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "Hazards", description = "Hazard reporting and management")
 public class HazardController {
 
@@ -49,8 +53,8 @@ public class HazardController {
     @GetMapping("/paged")
     @Operation(summary = "Get all hazards with pagination")
     public ResponseEntity<Page<Hazard>> findAllPaged(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size) {
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(hazardService.findAll(pageable));
     }
@@ -85,8 +89,8 @@ public class HazardController {
     @Operation(summary = "Get hazards by status with pagination")
     public ResponseEntity<Page<Hazard>> findByStatusPaged(
             @PathVariable HazardStatus status,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size) {
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(hazardService.findByStatus(status, pageable));
     }
