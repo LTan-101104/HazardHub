@@ -8,6 +8,9 @@ public final class HazardMapper {
     /*
     * Map HazardDTO to Entity, ignore id of dto so id from hazard will be automatically created when saved
     * */
+
+    private HazardMapper() {}
+
     public static Hazard toEntity(HazardDTO dto) {
         if (dto == null) {
             return null;

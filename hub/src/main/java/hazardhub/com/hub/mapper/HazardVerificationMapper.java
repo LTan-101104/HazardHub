@@ -5,6 +5,8 @@ import hazardhub.com.hub.model.entity.HazardVerification;
 
 public final class HazardVerificationMapper {
 
+    private HazardVerificationMapper() {}
+
     /*
      * Map HazardVerificationDTO to Entity, ignore id of dto so id will be automatically created when saved
      */
