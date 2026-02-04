@@ -4,6 +4,7 @@ import hazardhub.com.hub.model.dto.HazardDTO;
 import hazardhub.com.hub.model.enums.HazardSeverity;
 import hazardhub.com.hub.model.enums.HazardStatus;
 import hazardhub.com.hub.service.HazardService;
+import hazardhub.com.hub.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -39,6 +40,9 @@ class HazardControllerTest {
 
     @MockitoBean
     private HazardService hazardService;
+
+    @MockitoBean
+    private UserService userService;
 
     @Test
     void create_WithValidHazardDTO_ReturnsCreatedHazard() throws Exception {
