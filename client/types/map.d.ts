@@ -3,6 +3,23 @@ export interface LatLng {
   lng: number;
 }
 
+export interface PlaceResult {
+  placeId: string;
+  description: string;
+  mainText: string;
+  secondaryText: string;
+  position: LatLng;
+}
+
+export interface DirectionStep {
+  instruction: string;
+  distance: string;
+  duration: string;
+  maneuver?: string;
+  startLocation: LatLng;
+  endLocation: LatLng;
+}
+
 export type HazardType = 'snow' | 'ice' | 'flood' | 'construction' | 'accident' | 'tree' | 'power_line' | 'other';
 export type HazardSeverity = 'critical' | 'high' | 'medium' | 'low';
 
@@ -30,6 +47,8 @@ export interface RouteInfo {
   type: 'safest' | 'fastest';
   hazards: HazardMarker[];
   description: string;
+  path?: LatLng[];
+  steps?: DirectionStep[];
 }
 
 export interface WeatherInfo {
@@ -74,6 +93,9 @@ export interface MapContextState {
   currentInstruction: TurnInstruction | null;
   fromLocation: string;
   toLocation: string;
+  fromPosition: LatLng | null;
+  toPosition: LatLng | null;
+  isLoadingRoute: boolean;
   isChatOpen: boolean;
   isHazardDetailOpen: boolean;
   isHazardAlertVisible: boolean;
@@ -89,6 +111,9 @@ export type MapAction =
   | { type: 'SET_ROUTE'; payload: { active: RouteInfo; alternate?: RouteInfo } }
   | { type: 'CLEAR_ROUTE' }
   | { type: 'SET_LOCATIONS'; payload: { from: string; to: string } }
+  | { type: 'SET_FROM_LOCATION'; payload: { text: string; position: LatLng | null } }
+  | { type: 'SET_TO_LOCATION'; payload: { text: string; position: LatLng | null } }
+  | { type: 'SET_LOADING_ROUTE'; payload: boolean }
   | { type: 'START_NAVIGATION' }
   | { type: 'END_NAVIGATION' }
   | { type: 'TOGGLE_CHAT'; payload: boolean }
