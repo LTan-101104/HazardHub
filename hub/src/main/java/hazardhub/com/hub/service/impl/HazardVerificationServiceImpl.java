@@ -1,5 +1,6 @@
 package hazardhub.com.hub.service.impl;
 
+import hazardhub.com.hub.exception.BadRequestException;
 import hazardhub.com.hub.exception.ResourceNotFoundException;
 import hazardhub.com.hub.mapper.HazardVerificationMapper;
 import hazardhub.com.hub.model.dto.HazardVerificationDTO;
@@ -23,6 +24,10 @@ public class HazardVerificationServiceImpl implements HazardVerificationService 
 
     @Override
     public HazardVerificationDTO create(HazardVerificationDTO dto) {
+        if (existsByHazardIdAndUserId(dto.getHazardId(), dto.getUserId())) {
+            throw new BadRequestException("Verification already exists for hazardId: " + dto.getHazardId()
+                    + " and userId: " + dto.getUserId());
+        }
         HazardVerification entity = HazardVerificationMapper.toEntity(dto);
         HazardVerification saved = hazardVerificationRepository.save(entity);
         return HazardVerificationMapper.toDTO(saved);
@@ -92,7 +97,8 @@ public class HazardVerificationServiceImpl implements HazardVerificationService 
     }
 
     @Override
-    public List<HazardVerificationDTO> findByHazardIdAndVerificationType(String hazardId, VerificationType verificationType) {
+    public List<HazardVerificationDTO> findByHazardIdAndVerificationType(String hazardId,
+            VerificationType verificationType) {
         return hazardVerificationRepository.findByHazardIdAndVerificationType(hazardId, verificationType).stream()
                 .map(HazardVerificationMapper::toDTO)
                 .toList();
