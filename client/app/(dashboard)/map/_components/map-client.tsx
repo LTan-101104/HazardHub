@@ -17,6 +17,7 @@ import { NavigationBar } from './navigation/navigation-bar';
 import { useIsDesktop } from '@/lib/hooks/use-media-query';
 import { useDirections } from './hooks/use-directions';
 import { useEffect, useRef } from 'react';
+import { X } from 'lucide-react';
 
 function MapLayout() {
   const { state, dispatch } = useMap();
@@ -49,7 +50,9 @@ function MapLayout() {
           type: 'SET_ROUTE',
           payload: { active: activeRoute, alternate: alternateRoute },
         });
-
+        dispatch({ type: 'SET_ERROR', payload: null });
+      } else {
+        dispatch({ type: 'SET_ERROR', payload: 'Unable to calculate route. Please try different locations.' });
       }
 
       dispatch({ type: 'SET_LOADING_ROUTE', payload: false });
@@ -74,6 +77,22 @@ function MapLayout() {
       {/* Dim overlay when hazard detail is open on mobile */}
       {!isDesktop && state.isHazardDetailOpen && (
         <div className="absolute inset-0 z-10 bg-black/40" />
+      )}
+
+      {/* Error notification */}
+      {state.error && (
+        <div className="pointer-events-auto absolute left-4 right-4 top-4 z-50 lg:left-auto lg:right-6 lg:w-96">
+          <div className="flex items-center gap-3 rounded-lg border border-red-500/30 bg-red-900/90 px-4 py-3 text-sm text-white shadow-lg backdrop-blur-sm">
+            <span className="flex-1">{state.error}</span>
+            <button
+              onClick={() => dispatch({ type: 'SET_ERROR', payload: null })}
+              className="shrink-0 rounded p-1 hover:bg-red-800/50"
+              aria-label="Dismiss error"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Floating overlays */}
@@ -127,7 +146,7 @@ function MapLayout() {
                         ? 'u-turn'
                         : 'straight') as 'left' | 'right' | 'straight' | 'u-turn' | 'arrive'
                 }
-                distanceMiles={parseFloat(currentInstruction.distance) || 0.1}
+                distanceMiles={Number.isNaN(parseFloat(currentInstruction.distance)) ? 0.1 : parseFloat(currentInstruction.distance)}
                 streetName={currentInstruction.instruction.replace(/<[^>]*>/g, '').slice(0, 50)}
               />
             </div>

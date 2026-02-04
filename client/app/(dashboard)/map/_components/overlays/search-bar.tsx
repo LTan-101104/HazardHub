@@ -48,10 +48,15 @@ export function SearchBar() {
                 },
               });
             },
-            () => {
+            (error) => {
+              console.error('Geolocation error:', error.code, error.message);
+              const errorMessage = error.code === 1
+                ? 'Location access denied. Please enable location permissions.'
+                : 'Unable to get your location. Please enter a starting point manually.';
+              dispatch({ type: 'SET_ERROR', payload: errorMessage });
               dispatch({
                 type: 'SET_FROM_LOCATION',
-                payload: { text: 'Current Location', position: null },
+                payload: { text: '', position: null },
               });
             }
           );

@@ -24,6 +24,7 @@ const initialState: MapContextState = {
   navigationEta: '',
   navigationDistance: '',
   navigationArrival: '',
+  error: null,
 };
 
 function mapReducer(state: MapContextState, action: MapAction): MapContextState {
@@ -105,6 +106,8 @@ function mapReducer(state: MapContextState, action: MapAction): MapContextState 
       return { ...state, isHazardDetailOpen: action.payload };
     case 'TOGGLE_DRAWER':
       return { ...state, isDrawerOpen: action.payload };
+    case 'SET_ERROR':
+      return { ...state, error: action.payload };
     default:
       return state;
   }

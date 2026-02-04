@@ -103,6 +103,7 @@ export interface MapContextState {
   navigationEta: string;
   navigationDistance: string;
   navigationArrival: string;
+  error: string | null;
 }
 
 export type MapAction =
@@ -120,4 +121,5 @@ export type MapAction =
   | { type: 'ADD_CHAT_MESSAGE'; payload: ChatMessage }
   | { type: 'SET_HAZARD_ALERT'; payload: boolean }
   | { type: 'SHOW_HAZARD_DETAIL'; payload: boolean }
-  | { type: 'TOGGLE_DRAWER'; payload: boolean };
+  | { type: 'TOGGLE_DRAWER'; payload: boolean }
+  | { type: 'SET_ERROR'; payload: string | null };

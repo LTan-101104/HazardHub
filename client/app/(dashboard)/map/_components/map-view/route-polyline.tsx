@@ -46,7 +46,9 @@ export function RoutePolyline({
     });
 
     return () => {
-      polyline.setMap(null);
+      if (polyline) {
+        polyline.setMap(null);
+      }
     };
   }, [map, path, polylineOptions]);
 

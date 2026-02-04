@@ -54,12 +54,13 @@ export function LocationInputs() {
           });
           setFromInputValue('Current Location');
         },
-        () => {
-          dispatch({
-            type: 'SET_FROM_LOCATION',
-            payload: { text: 'Current Location', position: null },
-          });
-          setFromInputValue('Current Location');
+        (error) => {
+          console.error('Geolocation error:', error.code, error.message);
+          const errorMessage = error.code === 1
+            ? 'Location access denied. Please enable location permissions.'
+            : 'Unable to get your location. Please enter a starting point manually.';
+          dispatch({ type: 'SET_ERROR', payload: errorMessage });
+          setFromInputValue('');
         }
       );
     }
