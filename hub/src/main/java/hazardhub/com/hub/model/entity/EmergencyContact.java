@@ -1,30 +1,45 @@
 package hazardhub.com.hub.model.entity;
 
-import com.google.cloud.firestore.annotation.DocumentId;
-import com.google.cloud.firestore.annotation.ServerTimestamp;
+import hazardhub.com.hub.model.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.util.Date;
+import lombok.experimental.SuperBuilder;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmergencyContact {
-    @DocumentId
-    private String id; // UUID string
+@EqualsAndHashCode(callSuper = true)
+@Document(collection = "emergency_contacts")
+public class EmergencyContact extends BaseEntity {
 
-    private String userId; // Firebase UID (FK)
+    @Id
+    private String id;
+
+    @Indexed
+    @Field("user_id")
+    private String userId;
+
+    @Field("name")
     private String name;
+
+    @Field("phone")
     private String phone;
+
+    @Field("email")
     private String email;
 
-    @ServerTimestamp
-    private Date createdAt;
+    @Field("relationship")
+    private String relationship;
 
-    @ServerTimestamp
-    private Date updatedAt;
+    @Field("priority")
+    @Builder.Default
+    private Integer priority = 1;
 }
