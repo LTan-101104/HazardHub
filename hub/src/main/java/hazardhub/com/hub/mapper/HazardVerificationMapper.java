@@ -41,19 +41,13 @@ public final class HazardVerificationMapper {
     }
 
     /*
-     * Update entity based on dto, no override of entity's id is allowed
+     * Update entity based on dto, no override of entity's id and foreign key is allowed
      */
     public static void updateEntityFromDTO(HazardVerificationDTO dto, HazardVerification entity) {
         if (dto == null || entity == null) {
             return;
         }
 
-        if (dto.getHazardId() != null) {
-            entity.setHazardId(dto.getHazardId());
-        }
-        if (dto.getUserId() != null) {
-            entity.setUserId(dto.getUserId());
-        }
         if (dto.getVerificationType() != null) {
             entity.setVerificationType(dto.getVerificationType());
         }
