@@ -5,22 +5,25 @@ import type { MapContextState, MapAction } from '@/types/map';
 import { MOCK_WEATHER } from '@/lib/constants/map-config';
 
 const initialState: MapContextState = {
-  viewState: 'routing',
+  viewState: 'browse',
   selectedHazard: null,
   activeRoute: null,
   alternateRoute: null,
   weather: MOCK_WEATHER,
   chatMessages: [],
   currentInstruction: null,
-  fromLocation: 'Current Location',
-  toLocation: 'Memorial Hospital',
+  fromLocation: '',
+  toLocation: '',
+  fromPosition: null,
+  toPosition: null,
+  isLoadingRoute: false,
   isChatOpen: false,
   isHazardDetailOpen: false,
   isHazardAlertVisible: false,
   isDrawerOpen: false,
-  navigationEta: '12 min',
-  navigationDistance: '3.2 mi',
-  navigationArrival: '9:53 AM',
+  navigationEta: '',
+  navigationDistance: '',
+  navigationArrival: '',
 };
 
 function mapReducer(state: MapContextState, action: MapAction): MapContextState {
@@ -52,6 +55,24 @@ function mapReducer(state: MapContextState, action: MapAction): MapContextState 
         ...state,
         fromLocation: action.payload.from,
         toLocation: action.payload.to,
+      };
+    case 'SET_FROM_LOCATION':
+      return {
+        ...state,
+        fromLocation: action.payload.text,
+        fromPosition: action.payload.position,
+      };
+    case 'SET_TO_LOCATION':
+      return {
+        ...state,
+        toLocation: action.payload.text,
+        toPosition: action.payload.position,
+        viewState: action.payload.position ? 'routing' : state.viewState,
+      };
+    case 'SET_LOADING_ROUTE':
+      return {
+        ...state,
+        isLoadingRoute: action.payload,
       };
     case 'START_NAVIGATION':
       return {

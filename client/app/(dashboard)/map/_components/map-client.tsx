@@ -1,7 +1,7 @@
 'use client';
 
 import { MapProvider, useMap } from './map-provider';
-import { GoogleMapView } from './map-view/google-map-view';
+import { GoogleMapView, GoogleMapsProvider } from './map-view/google-map-view';
 import { SearchBar } from './overlays/search-bar';
 import { WeatherPanel } from './overlays/weather-panel';
 import { MapControls } from './overlays/map-controls';
@@ -15,28 +15,54 @@ import { HazardDetailSheet } from './mobile/hazard-detail-sheet';
 import { TurnInstructionCard } from './navigation/turn-instruction-card';
 import { NavigationBar } from './navigation/navigation-bar';
 import { useIsDesktop } from '@/lib/hooks/use-media-query';
-import {
-  MOCK_ROUTES,
-  MOCK_CHAT_MESSAGES,
-  MOCK_TURN_INSTRUCTION,
-} from '@/lib/constants/map-config';
-import { useEffect } from 'react';
+import { useDirections } from './hooks/use-directions';
+import { useEffect, useRef } from 'react';
 
 function MapLayout() {
   const { state, dispatch } = useMap();
   const isDesktop = useIsDesktop();
+  const { calculateRoute, isReady } = useDirections();
+  const isCalculatingRef = useRef(false);
 
-  // Load mock data on mount for demo
   useEffect(() => {
-    dispatch({ type: 'SET_ROUTE', payload: { active: MOCK_ROUTES.active, alternate: MOCK_ROUTES.alternate } });
-    // Pre-load chat messages for demo
-    MOCK_CHAT_MESSAGES.forEach((msg) => {
-      dispatch({ type: 'ADD_CHAT_MESSAGE', payload: msg });
-    });
-  }, [dispatch]);
+    const fetchRoute = async () => {
+      if (!state.fromPosition || !state.toPosition || !isReady || isCalculatingRef.current) {
+        return;
+      }
+
+      isCalculatingRef.current = true;
+      dispatch({ type: 'SET_LOADING_ROUTE', payload: true });
+
+      const result = await calculateRoute(state.fromPosition, state.toPosition, {
+        provideAlternatives: true,
+      });
+
+      if (result && result.routes.length > 0) {
+        const [primary, ...alternates] = result.routes;
+
+        const activeRoute = { ...primary, type: 'safest' as const, safetyPercent: 92 };
+        const alternateRoute = alternates[0]
+          ? { ...alternates[0], type: 'fastest' as const, safetyPercent: 74 }
+          : undefined;
+
+        dispatch({
+          type: 'SET_ROUTE',
+          payload: { active: activeRoute, alternate: alternateRoute },
+        });
+
+      }
+
+      dispatch({ type: 'SET_LOADING_ROUTE', payload: false });
+      isCalculatingRef.current = false;
+    };
+
+    fetchRoute();
+  }, [state.fromPosition, state.toPosition, isReady, calculateRoute, dispatch]);
 
   const showNavigationUI = state.viewState === 'navigating';
   const showBrowseOverlays = state.viewState !== 'navigating';
+
+  const currentInstruction = state.activeRoute?.steps?.[0];
 
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-[#1A1A1A]">
@@ -89,13 +115,23 @@ function MapLayout() {
           )}
 
           {/* Turn instruction */}
-          <div className="pointer-events-auto absolute left-4 right-4 top-[180px] lg:left-6 lg:right-[400px] lg:top-[180px]">
-            <TurnInstructionCard
-              direction={MOCK_TURN_INSTRUCTION.direction}
-              distanceMiles={MOCK_TURN_INSTRUCTION.distanceMiles}
-              streetName={MOCK_TURN_INSTRUCTION.streetName}
-            />
-          </div>
+          {currentInstruction && (
+            <div className="pointer-events-auto absolute left-4 right-4 top-[180px] lg:left-6 lg:right-[400px] lg:top-[180px]">
+              <TurnInstructionCard
+                direction={
+                  (currentInstruction.maneuver?.includes('left')
+                    ? 'left'
+                    : currentInstruction.maneuver?.includes('right')
+                      ? 'right'
+                      : currentInstruction.maneuver?.includes('u-turn')
+                        ? 'u-turn'
+                        : 'straight') as 'left' | 'right' | 'straight' | 'u-turn' | 'arrive'
+                }
+                distanceMiles={parseFloat(currentInstruction.distance) || 0.1}
+                streetName={currentInstruction.instruction.replace(/<[^>]*>/g, '').slice(0, 50)}
+              />
+            </div>
+          )}
 
           {/* Navigation bottom bar */}
           <div className="pointer-events-auto absolute bottom-0 left-0 right-0 lg:right-[380px]">
@@ -121,8 +157,10 @@ function MapLayout() {
 
 export function MapClient() {
   return (
-    <MapProvider>
-      <MapLayout />
-    </MapProvider>
+    <GoogleMapsProvider>
+      <MapProvider>
+        <MapLayout />
+      </MapProvider>
+    </GoogleMapsProvider>
   );
 }

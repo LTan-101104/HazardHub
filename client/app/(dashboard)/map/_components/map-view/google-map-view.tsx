@@ -2,6 +2,9 @@
 
 import { APIProvider, Map } from '@vis.gl/react-google-maps';
 import { DEFAULT_CENTER, DEFAULT_ZOOM, DARK_MAP_STYLES } from '@/lib/constants/map-config';
+import { RoutePolylines } from './route-polyline';
+import { RouteMarkers } from './route-markers';
+import { useMap } from '../map-provider';
 
 interface GoogleMapViewProps {
   children?: React.ReactNode;
@@ -10,7 +13,43 @@ interface GoogleMapViewProps {
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAP_ID;
 
+function MapContent({ children }: { children?: React.ReactNode }) {
+  const { state } = useMap();
+
+  return (
+    <>
+      <RoutePolylines
+        activePath={state.activeRoute?.path}
+        alternatePath={state.alternateRoute?.path}
+      />
+      <RouteMarkers origin={state.fromPosition} destination={state.toPosition} />
+      {children}
+    </>
+  );
+}
+
 export function GoogleMapView({ children }: GoogleMapViewProps) {
+  return (
+    <Map
+      defaultCenter={DEFAULT_CENTER}
+      defaultZoom={DEFAULT_ZOOM}
+      gestureHandling="greedy"
+      disableDefaultUI
+      className="h-full w-full"
+      {...(MAP_ID
+        ? { mapId: MAP_ID, colorScheme: 'DARK' as const }
+        : { styles: DARK_MAP_STYLES })}
+    >
+      <MapContent>{children}</MapContent>
+    </Map>
+  );
+}
+
+interface GoogleMapsProviderProps {
+  children: React.ReactNode;
+}
+
+export function GoogleMapsProvider({ children }: GoogleMapsProviderProps) {
   if (!API_KEY) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-[#1a2633]">
@@ -22,20 +61,5 @@ export function GoogleMapView({ children }: GoogleMapViewProps) {
     );
   }
 
-  return (
-    <APIProvider apiKey={API_KEY}>
-      <Map
-        defaultCenter={DEFAULT_CENTER}
-        defaultZoom={DEFAULT_ZOOM}
-        gestureHandling="greedy"
-        disableDefaultUI
-        className="h-full w-full"
-        {...(MAP_ID
-          ? { mapId: MAP_ID, colorScheme: 'DARK' as const }
-          : { styles: DARK_MAP_STYLES })}
-      >
-        {children}
-      </Map>
-    </APIProvider>
-  );
+  return <APIProvider apiKey={API_KEY}>{children}</APIProvider>;
 }
