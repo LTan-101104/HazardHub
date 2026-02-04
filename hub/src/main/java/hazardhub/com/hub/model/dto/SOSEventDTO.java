@@ -40,6 +40,7 @@ public class SOSEventDTO {
     @DecimalMax(value = "90.0", message = "Latitude must be <= 90")
     private Double latitude;
 
+    @NotNull(message = "Location accuracy must not be null")
     @Positive(message = "Location accuracy must be positive")
     private Double locationAccuracyMeters;
 

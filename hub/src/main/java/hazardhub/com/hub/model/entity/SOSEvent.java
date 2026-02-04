@@ -2,6 +2,7 @@ package hazardhub.com.hub.model.entity;
 
 import hazardhub.com.hub.model.BaseEntity;
 import hazardhub.com.hub.model.enums.SOSEventStatus;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -39,6 +40,7 @@ public class SOSEvent extends BaseEntity {
     @Field("resolved_at")
     private Instant resolvedAt;
 
+    @NotNull(message = "Location is required")
     @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
     private GeoJsonPoint location;
 

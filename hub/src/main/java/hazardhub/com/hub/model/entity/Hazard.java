@@ -3,6 +3,7 @@ package hazardhub.com.hub.model.entity;
 import hazardhub.com.hub.model.BaseEntity;
 import hazardhub.com.hub.model.enums.HazardSeverity;
 import hazardhub.com.hub.model.enums.HazardStatus;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -34,6 +35,7 @@ public class Hazard extends BaseEntity {
     @Field("expires_at")
     private Instant expiresAt;
 
+    @NotNull(message = "location is required")
     @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
     private GeoJsonPoint location;
 
