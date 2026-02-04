@@ -19,6 +19,9 @@ interface UseDirectionsReturn {
 }
 
 function generateRouteId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return `route-${crypto.randomUUID()}`;
+  }
   return `route-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
@@ -134,7 +137,8 @@ export function useDirections(): UseDirectionsReturn {
           routes,
           rawResponse: result,
         };
-      } catch {
+      } catch (error) {
+        console.error('Failed to calculate route:', error);
         return null;
       }
     },
