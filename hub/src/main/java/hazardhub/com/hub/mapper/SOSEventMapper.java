@@ -6,6 +6,10 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 
 public final class SOSEventMapper {
 
+    private SOSEventMapper() {
+        // Utility class; prevent instantiation
+    }
+
     /**
      * Map SOSEventDTO to Entity, ignore id of dto so id from entity will be automatically created when saved
      */

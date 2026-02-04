@@ -41,7 +41,6 @@ class HazardControllerTest {
     @MockitoBean
     private HazardService hazardService;
 
-
     @MockitoBean
     private UserService userService;
 

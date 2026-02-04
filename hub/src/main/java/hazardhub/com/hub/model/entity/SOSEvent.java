@@ -15,7 +15,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.Instant;
-import java.util.List;
 
 @Data
 @SuperBuilder
