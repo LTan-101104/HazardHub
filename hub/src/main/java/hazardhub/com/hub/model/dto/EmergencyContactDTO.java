@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -18,10 +19,10 @@ import java.time.Instant;
 @AllArgsConstructor
 public class EmergencyContactDTO {
 
-    private String id;
+    private UUID id;
 
-    @NotBlank(message = "User ID is required")
-    private String userId;
+    // Server-managed from authenticated principal.
+    private UUID userId;
 
     @NotBlank(message = "Name is required")
     @Size(max = 100, message = "Name must be <= 100 characters")
