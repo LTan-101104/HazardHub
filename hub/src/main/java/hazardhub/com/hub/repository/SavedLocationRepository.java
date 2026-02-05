@@ -11,5 +11,4 @@ public interface SavedLocationRepository extends MongoRepository<SavedLocation, 
 
     List<SavedLocation> findByUserId(String userId);
 
-    boolean existsByUserIdAndName(String userId, String name);
 }
