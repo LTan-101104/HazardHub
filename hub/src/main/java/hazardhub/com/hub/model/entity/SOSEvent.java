@@ -1,8 +1,7 @@
 package hazardhub.com.hub.model.entity;
 
 import hazardhub.com.hub.model.BaseEntity;
-import hazardhub.com.hub.model.enums.HazardSeverity;
-import hazardhub.com.hub.model.enums.HazardStatus;
+import hazardhub.com.hub.model.enums.SOSEventStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,48 +22,36 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@Document(collection = "hazards")
-public class Hazard extends BaseEntity {
+@Document(collection = "sos_events")
+public class SOSEvent extends BaseEntity {
 
     @Id
     private String id;
 
-    @Field("reporter_id")
-    private String reporterId;
+    @Field("user_id")
+    private String userId;
 
-    @Field("expires_at")
-    private Instant expiresAt;
+    @Field("trip_id")
+    private String tripId;
 
-    @NotNull(message = "location is required")
+    @Field("triggered_at")
+    private Instant triggeredAt;
+
+    @Field("resolved_at")
+    private Instant resolvedAt;
+
+    @NotNull(message = "Location is required")
     @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
     private GeoJsonPoint location;
 
     @Field("location_accuracy_meters")
     private Double locationAccuracyMeters;
 
-    private String address;
+    private SOSEventStatus status;
 
-    private HazardSeverity severity;
+    @Field("dispatch_notified")
+    private Boolean dispatchNotified;
 
-    private String description;
-
-    @Field("image_url")
-    private String imageUrl;
-
-    @Field("thumbnail_url")
-    private String thumbnailUrl;
-
-    private HazardStatus status;
-
-    @Field("verification_count")
-    private Integer verificationCount;
-
-    @Field("dispute_count")
-    private Integer disputeCount;
-
-    @Field("disabled_at")
-    private Instant disabledAt;
-
-    @Field("affected_radius_meters")
-    private Double affectedRadiusMeters;
+    @Field("dispatch_reference")
+    private String dispatchReference;
 }
