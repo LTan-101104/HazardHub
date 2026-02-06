@@ -32,7 +32,7 @@ public class RouteController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get route by ID")
-    public ResponseEntity<RouteDTO> findById(@PathVariable String id) {
+    public ResponseEntity<RouteDTO> findById(@PathVariable @NotBlank String id) {
         return routeService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -54,21 +54,21 @@ public class RouteController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update a route")
-    public ResponseEntity<RouteDTO> update(@PathVariable String id, @Valid @RequestBody RouteDTO routeDTO) {
+    public ResponseEntity<RouteDTO> update(@PathVariable @NotBlank String id, @Valid @RequestBody RouteDTO routeDTO) {
         RouteDTO updated = routeService.update(id, routeDTO);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a route")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable @NotBlank String id) {
         routeService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/select")
     @Operation(summary = "Mark a route as selected for its trip")
-    public ResponseEntity<RouteDTO> select(@PathVariable String id) {
+    public ResponseEntity<RouteDTO> select(@PathVariable @NotBlank String id) {
         RouteDTO selected = routeService.selectRoute(id);
         return ResponseEntity.ok(selected);
     }
