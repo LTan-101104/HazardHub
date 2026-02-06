@@ -66,6 +66,16 @@ public class RouteServiceImpl implements RouteService {
         routeRepository.deleteById(id);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * Implementation detail: uses two atomic
+     * {@code updateMulti}/{@code updateFirst}
+     * calls via {@link MongoTemplate} rather than a read-modify-write cycle,
+     * avoiding
+     * race conditions where concurrent requests could select multiple routes.
+     */
     @Override
     public RouteDTO selectRoute(String id) {
         Route target = routeRepository.findById(id)
