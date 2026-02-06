@@ -5,6 +5,10 @@ import hazardhub.com.hub.model.entity.Route;
 
 public final class RouteMapper {
 
+    private RouteMapper() {
+        throw new UnsupportedOperationException("Utility class");
+    }
+
     /*
      * Map RouteDTO to Entity, ignore id of dto so id will be automatically created
      * when saved
