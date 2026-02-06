@@ -48,7 +48,7 @@ public class RouteServiceImpl implements RouteService {
         Route existing = routeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Route not found with id: " + id));
 
-        RouteMapper.updateEntity(routeDTO, existing);
+        RouteMapper.updateEntityFromDTO(routeDTO, existing);
         Route saved = routeRepository.save(existing);
         return RouteMapper.toDTO(saved);
     }
@@ -77,7 +77,6 @@ public class RouteServiceImpl implements RouteService {
                 tripRoutes.stream()
                         .filter(Route::getIsSelected)
                         .findFirst()
-                        .orElse(target)
-        );
+                        .orElse(target));
     }
 }

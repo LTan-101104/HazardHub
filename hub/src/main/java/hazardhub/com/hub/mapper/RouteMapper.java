@@ -2,16 +2,19 @@ package hazardhub.com.hub.mapper;
 
 import hazardhub.com.hub.model.dto.RouteDTO;
 import hazardhub.com.hub.model.entity.Route;
-import lombok.experimental.UtilityClass;
 
-@UtilityClass
-public class RouteMapper {
+public final class RouteMapper {
 
-    public Route toEntity(RouteDTO dto) {
-        if (dto == null) return null;
+    /*
+     * Map RouteDTO to Entity, ignore id of dto so id will be automatically created
+     * when saved
+     */
+    public static Route toEntity(RouteDTO dto) {
+        if (dto == null) {
+            return null;
+        }
 
         return Route.builder()
-                .id(dto.getId())
                 .tripId(dto.getTripId())
                 .polyline(dto.getPolyline())
                 .waypoints(dto.getWaypoints())
@@ -24,8 +27,13 @@ public class RouteMapper {
                 .build();
     }
 
-    public RouteDTO toDTO(Route entity) {
-        if (entity == null) return null;
+    /*
+     * Map entity to DTO
+     */
+    public static RouteDTO toDTO(Route entity) {
+        if (entity == null) {
+            return null;
+        }
 
         return RouteDTO.builder()
                 .id(entity.getId())
@@ -43,17 +51,40 @@ public class RouteMapper {
                 .build();
     }
 
-    public void updateEntity(RouteDTO dto, Route entity) {
-        if (dto == null || entity == null) return;
+    /*
+     * Update entity based on DTO, no override of entity's id is allowed
+     */
+    public static void updateEntityFromDTO(RouteDTO dto, Route entity) {
+        if (dto == null || entity == null) {
+            return;
+        }
 
-        if (dto.getTripId() != null) entity.setTripId(dto.getTripId());
-        if (dto.getPolyline() != null) entity.setPolyline(dto.getPolyline());
-        if (dto.getWaypoints() != null) entity.setWaypoints(dto.getWaypoints());
-        if (dto.getDistanceMeters() != null) entity.setDistanceMeters(dto.getDistanceMeters());
-        if (dto.getDurationSeconds() != null) entity.setDurationSeconds(dto.getDurationSeconds());
-        if (dto.getSafetyScore() != null) entity.setSafetyScore(dto.getSafetyScore());
-        if (dto.getSafetyAnalysis() != null) entity.setSafetyAnalysis(dto.getSafetyAnalysis());
-        if (dto.getHazardsConsidered() != null) entity.setHazardsConsidered(dto.getHazardsConsidered());
-        if (dto.getIsSelected() != null) entity.setIsSelected(dto.getIsSelected());
+        if (dto.getTripId() != null) {
+            entity.setTripId(dto.getTripId());
+        }
+        if (dto.getPolyline() != null) {
+            entity.setPolyline(dto.getPolyline());
+        }
+        if (dto.getWaypoints() != null) {
+            entity.setWaypoints(dto.getWaypoints());
+        }
+        if (dto.getDistanceMeters() != null) {
+            entity.setDistanceMeters(dto.getDistanceMeters());
+        }
+        if (dto.getDurationSeconds() != null) {
+            entity.setDurationSeconds(dto.getDurationSeconds());
+        }
+        if (dto.getSafetyScore() != null) {
+            entity.setSafetyScore(dto.getSafetyScore());
+        }
+        if (dto.getSafetyAnalysis() != null) {
+            entity.setSafetyAnalysis(dto.getSafetyAnalysis());
+        }
+        if (dto.getHazardsConsidered() != null) {
+            entity.setHazardsConsidered(dto.getHazardsConsidered());
+        }
+        if (dto.getIsSelected() != null) {
+            entity.setIsSelected(dto.getIsSelected());
+        }
     }
 }
