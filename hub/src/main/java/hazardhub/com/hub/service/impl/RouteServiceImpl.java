@@ -94,7 +94,9 @@ public class RouteServiceImpl implements RouteService {
                 new Update().set("is_selected", true),
                 Route.class);
 
-        return RouteMapper.toDTO(
-                routeRepository.findById(id).orElse(target));
+        // Re-fetch to return the updated state
+        Route selected = routeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Route not found with id: " + id));
+        return RouteMapper.toDTO(selected);
     }
 }
