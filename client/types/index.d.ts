@@ -37,3 +37,36 @@ export interface AuthContextType {
   forgotPassword: (email: string) => Promise<void>;
   resendVerificationEmail: (email: string, password: string) => Promise<void>;
 }
+
+// SOS Event Status enum
+export enum SOSEventStatus {
+  ACTIVE = 'ACTIVE',
+  HELP_ARRIVING = 'HELP_ARRIVING',
+  RESOLVED = 'RESOLVED',
+}
+
+// SOS Event DTO interface
+export interface SOSEventDTO {
+  id?: string;
+  userId: string;
+  tripId?: string;
+  triggeredAt?: string;
+  resolvedAt?: string;
+  longitude: number;
+  latitude: number;
+  locationAccuracyMeters: number;
+  status?: SOSEventStatus;
+  dispatchNotified?: boolean;
+  dispatchReference?: string;
+}
+
+// Paginated response interface
+export interface PagedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
