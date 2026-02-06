@@ -2,7 +2,6 @@ package hazardhub.com.hub.model.entity;
 
 import hazardhub.com.hub.model.BaseEntity;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -11,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -24,6 +24,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 @Document(collection = "emergency_contacts")
 public class EmergencyContact extends BaseEntity {
 
@@ -37,27 +38,20 @@ public class EmergencyContact extends BaseEntity {
     private UUID userId;
 
     @NotBlank(message = "Name is required")
-    @Size(max = 100, message = "Name must be <= 100 characters")
-    @Field("name")
+    @Size(max = 100, message = "Name must be at most 100 characters")
     private String name;
 
     @NotBlank(message = "Phone is required")
-    @Size(max = 20, message = "Phone must be <= 20 characters")
-    @Field("phone")
+    @Size(max = 20, message = "Phone must be at most 20 characters")
     private String phone;
 
     @Email(message = "Email must be valid")
-    @Size(max = 255, message = "Email must be <= 255 characters")
-    @Field("email")
+    @Size(max = 255, message = "Email must be at most 255 characters")
     private String email;
 
-    @Size(max = 50, message = "Relationship must be <= 50 characters")
-    @Field("relationship")
+    @Size(max = 50, message = "Relationship must be at most 50 characters")
     private String relationship;
 
-    @NotNull(message = "Priority is required")
-    @Min(value = 1, message = "Priority must be >= 1")
-    @Field("priority")
     @Builder.Default
     private Integer priority = 1;
 }
