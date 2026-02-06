@@ -151,14 +151,13 @@ function ReportHazardContent() {
   }, []);
 
   const handleConfirm = useCallback(() => {
+    const params = new URLSearchParams();
     if (selectedLocation) {
-      const params = new URLSearchParams({
-        lat: selectedLocation.lat.toString(),
-        lng: selectedLocation.lng.toString(),
-        ...(selectedLocation.address && { address: selectedLocation.address }),
-      });
-      router.push(`/report-hazard/details?${params.toString()}`);
+      params.set('lat', selectedLocation.lat.toString());
+      params.set('lng', selectedLocation.lng.toString());
+      if (selectedLocation.address) params.set('address', selectedLocation.address);
     }
+    router.push(`/report-hazard/details?${params.toString()}`);
   }, [selectedLocation, router]);
 
   return (
@@ -279,8 +278,7 @@ function ReportHazardContent() {
         <div className="px-4 pb-8 pt-4">
           <button
             onClick={handleConfirm}
-            disabled={!selectedLocation && locationMode === 'pin'}
-            className="flex h-[52px] w-full items-center justify-center gap-2 rounded-3xl bg-[#FF8400] font-semibold text-[#111111] transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="flex h-[52px] w-full items-center justify-center gap-2 rounded-3xl bg-[#FF8400] font-semibold text-[#111111] transition-opacity hover:opacity-90"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             <Check className="size-[18px]" />
