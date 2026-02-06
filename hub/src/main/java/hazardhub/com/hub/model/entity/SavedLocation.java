@@ -1,8 +1,7 @@
 package hazardhub.com.hub.model.entity;
 
 import hazardhub.com.hub.model.BaseEntity;
-import hazardhub.com.hub.model.enums.HazardSeverity;
-import hazardhub.com.hub.model.enums.HazardStatus;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,58 +12,32 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
-
-import java.time.Instant;
 
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@Document(collection = "hazards")
-public class Hazard extends BaseEntity {
+@Document(collection = "saved_locations")
+public class SavedLocation extends BaseEntity {
 
     @Id
     private String id;
 
-    @Field("reporter_id")
-    private String reporterId;
+    @NotBlank(message = "userId is required")
+    @Indexed
+    @Field("user_id")
+    private String userId;
 
-    @Field("expires_at")
-    private Instant expiresAt;
+    @NotBlank(message = "name is required")
+    private String name;
 
     @NotNull(message = "location is required")
     @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
     private GeoJsonPoint location;
 
-    @Field("location_accuracy_meters")
-    private Double locationAccuracyMeters;
-
     private String address;
-
-    private HazardSeverity severity;
-
-    private String description;
-
-    @Field("image_url")
-    private String imageUrl;
-
-    @Field("thumbnail_url")
-    private String thumbnailUrl;
-
-    private HazardStatus status;
-
-    @Field("verification_count")
-    private Integer verificationCount;
-
-    @Field("dispute_count")
-    private Integer disputeCount;
-
-    @Field("disabled_at")
-    private Instant disabledAt;
-
-    @Field("affected_radius_meters")
-    private Double affectedRadiusMeters;
 }

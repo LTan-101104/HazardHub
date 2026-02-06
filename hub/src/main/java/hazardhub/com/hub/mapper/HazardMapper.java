@@ -3,12 +3,14 @@ package hazardhub.com.hub.mapper;
 import hazardhub.com.hub.model.dto.HazardDTO;
 import hazardhub.com.hub.model.entity.Hazard;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
-import org.springframework.stereotype.Component;
 
 public final class HazardMapper {
     /*
     * Map HazardDTO to Entity, ignore id of dto so id from hazard will be automatically created when saved
     * */
+
+    private HazardMapper() {}
+
     public static Hazard toEntity(HazardDTO dto) {
         if (dto == null) {
             return null;
@@ -63,16 +65,13 @@ public final class HazardMapper {
     }
 
     /*
-    * update entity based on dto, no override of entity's id is allowed
+    * update entity based on dto, no override of entity's id and foreign key is allowed
     * */
     public static void updateEntityFromDTO(HazardDTO dto, Hazard entity) {
         if (dto == null || entity == null) {
             return;
         }
 
-        if (dto.getReporterId() != null) {
-            entity.setReporterId(dto.getReporterId());
-        }
         if (dto.getExpiresAt() != null) {
             entity.setExpiresAt(dto.getExpiresAt());
         }
