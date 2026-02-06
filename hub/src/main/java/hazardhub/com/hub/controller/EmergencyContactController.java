@@ -1,6 +1,7 @@
 package hazardhub.com.hub.controller;
 
 import hazardhub.com.hub.model.dto.EmergencyContactDTO;
+import hazardhub.com.hub.model.dto.UpdateEmergencyContactDTO;
 import hazardhub.com.hub.service.EmergencyContactService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -61,7 +62,7 @@ public class EmergencyContactController {
     public ResponseEntity<EmergencyContactDTO> updateContact(
             @AuthenticationPrincipal String uid,
             @PathVariable UUID contactId,
-            @Valid @RequestBody EmergencyContactDTO updates) {
+            @Valid @RequestBody UpdateEmergencyContactDTO updates) {
         EmergencyContactDTO updated = emergencyContactService.updateEmergencyContact(uid, contactId, updates);
         return ResponseEntity.ok(updated);
     }

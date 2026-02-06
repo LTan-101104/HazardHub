@@ -4,6 +4,7 @@ import hazardhub.com.hub.exception.BadRequestException;
 import hazardhub.com.hub.exception.ResourceNotFoundException;
 import hazardhub.com.hub.mapper.EmergencyContactMapper;
 import hazardhub.com.hub.model.dto.EmergencyContactDTO;
+import hazardhub.com.hub.model.dto.UpdateEmergencyContactDTO;
 import hazardhub.com.hub.model.entity.EmergencyContact;
 import hazardhub.com.hub.repository.EmergencyContactRepository;
 import lombok.RequiredArgsConstructor;
@@ -44,11 +45,9 @@ public class EmergencyContactService {
         return EmergencyContactMapper.toDTO(contact);
     }
 
-    public EmergencyContactDTO updateEmergencyContact(String uid, UUID contactId, EmergencyContactDTO updates) {
-        UUID userId = toUserUuid(uid);
+    public EmergencyContactDTO updateEmergencyContact(String uid, UUID contactId, UpdateEmergencyContactDTO updates) {
         EmergencyContact contact = getOwnedContact(uid, contactId);
         EmergencyContactMapper.updateEntityFromDTO(updates, contact);
-        contact.setUserId(userId);
 
         EmergencyContact saved = emergencyContactRepository.save(contact);
         log.info("Updated emergency contact {} for user {}", contactId, uid);
