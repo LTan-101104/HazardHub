@@ -2,6 +2,7 @@ package hazardhub.com.hub.mapper;
 
 import hazardhub.com.hub.model.dto.TripDTO;
 import hazardhub.com.hub.model.entity.Trip;
+import hazardhub.com.hub.model.enums.TripStatus;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 
 public final class TripMapper {
@@ -23,7 +24,7 @@ public final class TripMapper {
                 .destination(new GeoJsonPoint(dto.getDestinationLongitude(), dto.getDestinationLatitude()))
                 .destinationAddress(dto.getDestinationAddress())
                 .selectedRouteId(dto.getSelectedRouteId())
-                .status(dto.getStatus());
+                .status(dto.getStatus() != null ? dto.getStatus() : TripStatus.PLANNING);
 
         return builder.build();
     }
