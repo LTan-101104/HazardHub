@@ -7,6 +7,10 @@ import hazardhub.com.hub.model.entity.Route;
 import hazardhub.com.hub.repository.RouteRepository;
 import hazardhub.com.hub.service.RouteService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,6 +21,7 @@ import java.util.Optional;
 public class RouteServiceImpl implements RouteService {
 
     private final RouteRepository routeRepository;
+    private final MongoTemplate mongoTemplate;
 
     @Override
     public RouteDTO create(RouteDTO routeDTO) {
@@ -66,17 +71,20 @@ public class RouteServiceImpl implements RouteService {
         Route target = routeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Route not found with id: " + id));
 
-        List<Route> tripRoutes = routeRepository.findByTripId(target.getTripId());
+        // Atomically deselect all routes for this trip
+        mongoTemplate.updateMulti(
+                Query.query(Criteria.where("trip_id").is(target.getTripId())
+                        .and("is_selected").is(true)),
+                new Update().set("is_selected", false),
+                Route.class);
 
-        for (Route r : tripRoutes) {
-            r.setIsSelected(r.getId().equals(id));
-        }
+        // Atomically select the target route
+        mongoTemplate.updateFirst(
+                Query.query(Criteria.where("_id").is(id)),
+                new Update().set("is_selected", true),
+                Route.class);
 
-        routeRepository.saveAll(tripRoutes);
         return RouteMapper.toDTO(
-                tripRoutes.stream()
-                        .filter(Route::getIsSelected)
-                        .findFirst()
-                        .orElse(target));
+                routeRepository.findById(id).orElse(target));
     }
 }
