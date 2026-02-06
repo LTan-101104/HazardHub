@@ -52,16 +52,18 @@ public final class RouteMapper {
     }
 
     /*
-     * Update entity based on DTO, no override of entity's id is allowed
+     * Update entity based on DTO.
+     * Neither id nor tripId are mutable after creation — tripId is immutable
+     * because {@code selectRoute} groups routes by trip, and allowing a route
+     * to move between trips would corrupt the selection state.
      */
     public static void updateEntityFromDTO(RouteDTO dto, Route entity) {
         if (dto == null || entity == null) {
             return;
         }
 
-        if (dto.getTripId() != null) {
-            entity.setTripId(dto.getTripId());
-        }
+        // tripId is intentionally not updated — see Javadoc above
+
         if (dto.getPolyline() != null) {
             entity.setPolyline(dto.getPolyline());
         }
