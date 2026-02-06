@@ -7,10 +7,13 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 
 public final class TripMapper {
 
+    private TripMapper() {}
+
     /*
      * Map TripDTO to Entity, ignore id of dto so id from trip will be automatically created when saved
      */
     public static Trip toEntity(TripDTO dto) {
+
         if (dto == null) {
             return null;
         }
