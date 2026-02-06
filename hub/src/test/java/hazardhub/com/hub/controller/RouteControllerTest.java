@@ -1,7 +1,9 @@
 package hazardhub.com.hub.controller;
 
 import hazardhub.com.hub.exception.ResourceNotFoundException;
+import hazardhub.com.hub.mapper.RouteMapper;
 import hazardhub.com.hub.model.dto.RouteDTO;
+import hazardhub.com.hub.model.entity.Route;
 import hazardhub.com.hub.service.HazardService;
 import hazardhub.com.hub.service.RouteService;
 import org.junit.jupiter.api.Test;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -181,6 +184,17 @@ class RouteControllerTest {
     void create_WithNegativeDuration_ReturnsBadRequest() throws Exception {
         RouteDTO input = validInput();
         input.setDurationSeconds(-60);
+
+        mockMvc.perform(post("/api/v1/routes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(input)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void create_WithZeroDuration_ReturnsBadRequest() throws Exception {
+        RouteDTO input = validInput();
+        input.setDurationSeconds(0);
 
         mockMvc.perform(post("/api/v1/routes")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -387,5 +401,83 @@ class RouteControllerTest {
 
         mockMvc.perform(post("/api/v1/routes/non-existing/select"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void select_WhenAnotherRouteAlreadySelected_ReturnsNewlySelectedRoute() throws Exception {
+        RouteDTO newlySelected = savedRoute("route-002", true);
+        when(routeService.selectRoute("route-002")).thenReturn(newlySelected);
+
+        mockMvc.perform(post("/api/v1/routes/route-002/select"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").value("route-002"))
+                .andExpect(jsonPath("$.isSelected").value(true));
+    }
+
+    @Test
+    void select_SameRouteTwice_IsIdempotent() throws Exception {
+        RouteDTO selected = savedRoute("route-001", true);
+        when(routeService.selectRoute("route-001")).thenReturn(selected);
+
+        // First selection
+        mockMvc.perform(post("/api/v1/routes/route-001/select"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isSelected").value(true));
+
+        // Second selection — same result
+        mockMvc.perform(post("/api/v1/routes/route-001/select"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("route-001"))
+                .andExpect(jsonPath("$.isSelected").value(true));
+
+        verify(routeService, times(2)).selectRoute("route-001");
+    }
+
+    @Test
+    void select_VerifiesOnlyOneRouteSelectedPerTrip() throws Exception {
+        // Select route-002 — service returns it as selected
+        RouteDTO selectedRoute2 = savedRoute("route-002", true);
+        when(routeService.selectRoute("route-002")).thenReturn(selectedRoute2);
+
+        mockMvc.perform(post("/api/v1/routes/route-002/select"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isSelected").value(true));
+
+        // Verify findByTripId returns only one selected route
+        RouteDTO route1 = savedRoute("route-001", false);
+        RouteDTO route2 = savedRoute("route-002", true);
+        when(routeService.findByTripId("trip-001")).thenReturn(List.of(route1, route2));
+
+        mockMvc.perform(get("/api/v1/routes/trip/trip-001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value("route-001"))
+                .andExpect(jsonPath("$[0].isSelected").value(false))
+                .andExpect(jsonPath("$[1].id").value("route-002"))
+                .andExpect(jsonPath("$[1].isSelected").value(true));
+    }
+
+    // ── Mapper: tripId immutability ───────────────────────────────────
+
+    @Test
+    void updateEntityFromDTO_DoesNotChangeTripId() {
+        Route entity = Route.builder()
+                .id("route-001")
+                .tripId("trip-original")
+                .polyline("oldPolyline")
+                .distanceMeters(1000)
+                .durationSeconds(120)
+                .safetyScore(0.5)
+                .build();
+
+        RouteDTO dto = RouteDTO.builder()
+                .tripId("trip-different")
+                .polyline("newPolyline")
+                .build();
+
+        RouteMapper.updateEntityFromDTO(dto, entity);
+
+        assertEquals("trip-original", entity.getTripId(), "tripId must be immutable after creation");
+        assertEquals("newPolyline", entity.getPolyline(), "other fields should still update");
     }
 }
