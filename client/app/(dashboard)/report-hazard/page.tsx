@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Search, Plus, Minus, Crosshair, MapPin, Check, Loader2 } from 'lucide-react';
-import { APIProvider, Map, useMap as useGoogleMap } from '@vis.gl/react-google-maps';
+import { APIProvider, Map, useMap as useGoogleMap, AdvancedMarker } from '@vis.gl/react-google-maps';
 import { DEFAULT_CENTER, DEFAULT_ZOOM, DARK_MAP_STYLES } from '@/lib/constants/map-config';
 import { usePlacesAutocomplete } from '../map/_components/hooks/use-places-autocomplete';
 import { useReportHazard } from './_context/report-hazard-context';
@@ -106,15 +106,21 @@ function MapInner({
           <InstructionBubble />
         </>
       )}
+      {locationMode !== 'pin' && panTarget && (
+        <AdvancedMarker position={panTarget}>
+          <div className="flex flex-col items-center">
+            <div className="flex size-12 items-center justify-center rounded-full bg-[#CC3333] shadow-[0_4px_16px_rgba(204,51,51,0.4)]">
+              <MapPin className="size-6 text-white" />
+            </div>
+            <div className="h-3 w-1 rounded-b bg-[#CC3333]" />
+          </div>
+        </AdvancedMarker>
+      )}
     </>
   );
 }
 
-function SearchBar({
-  onPlaceSelect,
-}: {
-  onPlaceSelect: (lat: number, lng: number, address: string) => void;
-}) {
+function SearchBar({ onPlaceSelect }: { onPlaceSelect: (lat: number, lng: number, address: string) => void }) {
   const [inputValue, setInputValue] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -202,9 +208,7 @@ function SearchBar({
               onClick={() => handleSelect(prediction)}
               className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
                 highlightedIndex === index ? 'bg-[#2E2E2E]' : 'hover:bg-[#2E2E2E]'
-              } ${index === 0 ? 'rounded-t-2xl' : ''} ${
-                index === predictions.length - 1 ? 'rounded-b-2xl' : ''
-              }`}
+              } ${index === 0 ? 'rounded-t-2xl' : ''} ${index === predictions.length - 1 ? 'rounded-b-2xl' : ''}`}
             >
               <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#3E3E3E]">
                 <MapPin className="size-4 text-[#B8B9B6]" />
@@ -294,7 +298,12 @@ function ReportHazardContent() {
           className="h-full w-full"
           {...(MAP_ID ? { mapId: MAP_ID, colorScheme: 'DARK' as const } : { styles: DARK_MAP_STYLES })}
         >
-          <MapInner locationMode={locationMode} panTarget={panTarget} onCenterChange={handleCenterChange} onLocate={handleLocate} />
+          <MapInner
+            locationMode={locationMode}
+            panTarget={panTarget}
+            onCenterChange={handleCenterChange}
+            onLocate={handleLocate}
+          />
         </Map>
       </div>
 
