@@ -66,6 +66,10 @@ public class UserService {
         }
     }
 
+    public boolean existsById(String uid) throws ExecutionException, InterruptedException {
+        return firestoreService.getDocument(COLLECTION_NAME, uid, User.class) != null;
+    }
+
     public UserResponse getUserById(String uid) throws ExecutionException, InterruptedException {
         log.info("Fetching user with UID: {}", uid);
 

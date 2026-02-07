@@ -1,0 +1,8 @@
+package hazardhub.com.hub.constants;
+
+public final class HazardHubConstants {
+
+    public static final class Hazard{
+        public static final Double DEFAULT_AFFECTED_RADIUS_METERS = 50.0;
+    }
+}
