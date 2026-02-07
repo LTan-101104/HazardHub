@@ -14,16 +14,76 @@ import { ChatSheet } from './mobile/chat-sheet';
 import { HazardDetailSheet } from './mobile/hazard-detail-sheet';
 import { TurnInstructionCard } from './navigation/turn-instruction-card';
 import { NavigationBar } from './navigation/navigation-bar';
+import { DEFAULT_CENTER } from '@/lib/constants/map-config';
 import { useIsDesktop } from '@/lib/hooks/use-media-query';
 import { useDirections } from './hooks/use-directions';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
+import { getNearbyHazards } from '@/lib/actions/hazard-action';
+import { useAuth } from '@/context/AuthContext';
+import { auth } from '@/lib/firebase';
+import type { HazardMarker, HazardSeverity } from '@/types/map';
+import type { HazardDTO } from '@/types';
+
+function dtoToMarker(dto: HazardDTO): HazardMarker {
+  return {
+    id: dto.id!,
+    position: { lat: dto.latitude, lng: dto.longitude },
+    type: 'other',
+    severity: dto.severity.toLowerCase() as HazardSeverity,
+    title: dto.description,
+    description: dto.description,
+    reportedAt: new Date().toISOString(),
+    reportCount: (dto.verificationCount ?? 0) + 1,
+  };
+}
 
 function MapLayout() {
   const { state, dispatch } = useMap();
+  const { user } = useAuth();
   const isDesktop = useIsDesktop();
   const { calculateRoute, isReady } = useDirections();
   const isCalculatingRef = useRef(false);
+  const [hazards, setHazards] = useState<HazardMarker[]>([]);
+
+  // Fetch nearby hazards once user is authenticated
+  useEffect(() => {
+    if (!user) return;
+
+    async function fetchHazards(lat: number, lng: number) {
+      try {
+        const currentUser = auth?.currentUser;
+        if (!currentUser) return;
+        const idToken = await currentUser.getIdToken();
+        console.log('Fetching hazards at:', { lat, lng, maxDistance: 5000000 });
+        const dtos = await getNearbyHazards(idToken, lng, lat, 5000000);
+        console.log('Hazard DTOs received:', dtos.length, dtos);
+        setHazards(dtos.map(dtoToMarker));
+      } catch (err) {
+        console.error('Failed to fetch hazards:', err);
+      }
+    }
+
+    if (navigator.geolocation) {
+      console.log('Using browser geolocation...');
+      navigator.geolocation.getCurrentPosition(
+        (pos) => fetchHazards(pos.coords.latitude, pos.coords.longitude),
+        () => {
+          // Fallback: fetch around default center
+          fetchHazards(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
+        },
+      );
+    } else {
+      fetchHazards(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
+    }
+  }, [user]);
+
+  const handleHazardSelect = useCallback(
+    (hazard: HazardMarker) => {
+      dispatch({ type: 'SELECT_HAZARD', payload: hazard });
+    },
+    [dispatch],
+  );
 
   useEffect(() => {
     const fetchRoute = async () => {
@@ -42,9 +102,7 @@ function MapLayout() {
         const [primary, ...alternates] = result.routes;
 
         const activeRoute = { ...primary, type: 'safest' as const, safetyPercent: 92 };
-        const alternateRoute = alternates[0]
-          ? { ...alternates[0], type: 'fastest' as const, safetyPercent: 74 }
-          : undefined;
+        const alternateRoute = alternates[0] ? { ...alternates[0], type: 'fastest' as const, safetyPercent: 74 } : undefined;
 
         dispatch({
           type: 'SET_ROUTE',
@@ -71,13 +129,11 @@ function MapLayout() {
     <div className="relative h-dvh w-full overflow-hidden bg-[#1A1A1A]">
       {/* Full-screen map */}
       <div className={`absolute inset-0 ${isDesktop ? 'lg:right-[380px]' : ''}`}>
-        <GoogleMapView />
+        <GoogleMapView hazards={hazards} onHazardSelect={handleHazardSelect} />
       </div>
 
       {/* Dim overlay when hazard detail is open on mobile */}
-      {!isDesktop && state.isHazardDetailOpen && (
-        <div className="absolute inset-0 z-10 bg-black/40" />
-      )}
+      {!isDesktop && state.isHazardDetailOpen && <div className="absolute inset-0 z-10 bg-black/40" />}
 
       {/* Error notification */}
       {state.error && (
@@ -146,7 +202,9 @@ function MapLayout() {
                         ? 'u-turn'
                         : 'straight') as 'left' | 'right' | 'straight' | 'u-turn' | 'arrive'
                 }
-                distanceMiles={Number.isNaN(parseFloat(currentInstruction.distance)) ? 0.1 : parseFloat(currentInstruction.distance)}
+                distanceMiles={
+                  Number.isNaN(parseFloat(currentInstruction.distance)) ? 0.1 : parseFloat(currentInstruction.distance)
+                }
                 streetName={currentInstruction.instruction.replace(/<[^>]*>/g, '').slice(0, 50)}
               />
             </div>

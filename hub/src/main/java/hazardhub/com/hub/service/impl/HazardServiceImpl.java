@@ -29,7 +29,7 @@ public class HazardServiceImpl implements HazardService {
     public HazardDTO create(HazardDTO hazardDTO) {
         Hazard hazard = HazardMapper.toEntity(hazardDTO);
         if (hazard.getStatus() == null) {
-            hazard.setStatus(HazardStatus.PENDING);
+            hazard.setStatus(HazardStatus.ACTIVE);
         }
         if (hazard.getVerificationCount() == null) {
             hazard.setVerificationCount(0);
