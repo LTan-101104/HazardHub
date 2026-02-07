@@ -214,6 +214,49 @@
   }
 }
 
+/* SOS Pulse animations */
+@keyframes sos-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes sos-ring-pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.animate-sos-pulse {
+  animation: sos-pulse 2s ease-out infinite;
+}
+
+.animate-sos-ring {
+  animation: sos-ring-pulse 1.5s ease-out infinite;
+}
+
+/* SOS Pin Mode Cursor */
+.cursor-sos-pin,
+.cursor-sos-pin *,
+.cursor-sos-pin div,
+.cursor-sos-pin canvas {
+  cursor: crosshair !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
