@@ -42,28 +42,6 @@ public final class EmergencyContactMapper {
                 .build();
     }
 
-    public static void updateEntityFromDTO(EmergencyContactDTO dto, EmergencyContact entity) {
-        if (dto == null || entity == null) {
-            return;
-        }
-
-        if (dto.getName() != null) {
-            entity.setName(dto.getName());
-        }
-        if (dto.getPhone() != null) {
-            entity.setPhone(dto.getPhone());
-        }
-        if (dto.getEmail() != null) {
-            entity.setEmail(dto.getEmail());
-        }
-        if (dto.getRelationship() != null) {
-            entity.setRelationship(dto.getRelationship());
-        }
-        if (dto.getPriority() != null) {
-            entity.setPriority(dto.getPriority());
-        }
-    }
-
     public static void updateEntityFromDTO(UpdateEmergencyContactDTO dto, EmergencyContact entity) {
         if (dto == null || entity == null) {
             return;
