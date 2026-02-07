@@ -15,6 +15,11 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
+/*
+The current approach relies temporarily store the image in base64 format in-memory in server, this is not a long-term solution.
+This is only implemented because gemini api is not config to read directly from firebase bucket yet. 
+Will need some better, well-rounded solution in the future
+*/
 @Service
 @RequiredArgsConstructor
 @Slf4j

@@ -26,13 +26,19 @@ import type { HazardMarker, HazardSeverity } from '@/types/map';
 import type { HazardDTO } from '@/types';
 
 function dtoToMarker(dto: HazardDTO): HazardMarker {
+  // Use the first sentence (up to 60 chars) as a short title
+  const raw = dto.description ?? '';
+  const firstSentence = raw.split(/[.!?]\s/)[0];
+  const title = firstSentence.length > 60 ? firstSentence.slice(0, 57) + '...' : firstSentence;
+
   return {
     id: dto.id!,
     position: { lat: dto.latitude, lng: dto.longitude },
     type: 'other',
     severity: dto.severity.toLowerCase() as HazardSeverity,
-    title: dto.description,
+    title,
     description: dto.description,
+    imageUrl: dto.imageUrl ?? undefined,
     reportedAt: new Date().toISOString(),
     reportCount: (dto.verificationCount ?? 0) + 1,
   };
