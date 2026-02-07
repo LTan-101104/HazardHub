@@ -8,6 +8,7 @@ import { MapControls } from './overlays/map-controls';
 import { MenuButton } from './overlays/menu-button';
 import { AskGeminiFab } from './overlays/ask-gemini-fab';
 import { HazardAlertPopup } from './overlays/hazard-alert-popup';
+import { SOSPopup } from './overlays/sos-popup';
 import { SidePanel } from './desktop/side-panel';
 import { RouteSheet } from './mobile/route-sheet';
 import { ChatSheet } from './mobile/chat-sheet';
@@ -17,8 +18,9 @@ import { NavigationBar } from './navigation/navigation-bar';
 import { DEFAULT_CENTER, HAZARD_SEARCH_RADIUS_METERS } from '@/lib/constants/map-config';
 import { useIsDesktop } from '@/lib/hooks/use-media-query';
 import { useDirections } from './hooks/use-directions';
+import { useSOS } from './hooks/use-sos';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { X } from 'lucide-react';
+import { X, AlertTriangle } from 'lucide-react';
 import { getNearbyHazards } from '@/lib/actions/hazard-action';
 import { useAuth } from '@/context/AuthContext';
 import { auth } from '@/lib/firebase';
@@ -50,6 +52,7 @@ function MapLayout() {
   const isDesktop = useIsDesktop();
   const { calculateRoute, isReady } = useDirections();
   const isCalculatingRef = useRef(false);
+  const { sosEvent } = useSOS();
   const [hazards, setHazards] = useState<HazardMarker[]>([]);
 
   // Fetch nearby hazards once user is authenticated
@@ -141,6 +144,23 @@ function MapLayout() {
       {/* Dim overlay when hazard detail is open on mobile */}
       {!isDesktop && state.isHazardDetailOpen && <div className="absolute inset-0 z-10 bg-black/40" />}
 
+      {/* SOS Pin Mode Banner */}
+      {state.isSOSPinMode && (
+        <div className="pointer-events-auto absolute left-4 right-4 top-4 z-50 lg:left-auto lg:right-6 lg:w-96">
+          <div className="flex items-center gap-3 rounded-lg border border-red-500/50 bg-red-900/90 px-4 py-3 text-sm text-white shadow-lg backdrop-blur-sm animate-pulse">
+            <AlertTriangle className="size-5 text-red-400 shrink-0" />
+            <span className="flex-1 font-medium">Tap on the map to set your SOS location</span>
+            <button
+              onClick={() => dispatch({ type: 'TOGGLE_SOS_PIN_MODE', payload: false })}
+              className="shrink-0 rounded p-1 hover:bg-red-800/50"
+              aria-label="Cancel SOS pin mode"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Error notification */}
       {state.error && (
         <div className="pointer-events-auto absolute left-4 right-4 top-4 z-50 lg:left-auto lg:right-6 lg:w-96">
@@ -167,18 +187,18 @@ function MapLayout() {
           </div>
 
           {/* Weather panel */}
-          <div className="pointer-events-auto absolute left-4 top-[120px] lg:top-20">
+          <div className="pointer-events-auto absolute left-4 top-30 lg:top-20">
             <WeatherPanel />
           </div>
 
           {/* Map controls - right side */}
-          <div className="pointer-events-auto absolute right-4 top-[120px] lg:right-[400px] lg:top-20">
+          <div className="pointer-events-auto absolute right-4 top-30 lg:right-100 lg:top-20">
             <MapControls />
           </div>
 
           {/* Ask Gemini FAB */}
           {state.viewState === 'browse' && (
-            <div className="pointer-events-auto absolute bottom-[380px] left-4 lg:bottom-6 lg:left-6">
+            <div className="pointer-events-auto absolute bottom-95 left-4 lg:bottom-6 lg:left-6">
               <AskGeminiFab />
             </div>
           )}
@@ -190,14 +210,14 @@ function MapLayout() {
         <div className="pointer-events-none absolute inset-0 z-20">
           {/* Hazard alert popup */}
           {state.isHazardAlertVisible && (
-            <div className="pointer-events-auto absolute left-4 right-4 top-14 lg:left-6 lg:right-[400px] lg:top-6">
+            <div className="pointer-events-auto absolute left-4 right-4 top-14 lg:left-6 lg:right-100 lg:top-6">
               <HazardAlertPopup />
             </div>
           )}
 
           {/* Turn instruction */}
           {currentInstruction && (
-            <div className="pointer-events-auto absolute left-4 right-4 top-[180px] lg:left-6 lg:right-[400px] lg:top-[180px]">
+            <div className="pointer-events-auto absolute left-4 right-4 top-45 lg:left-6 lg:right-100 lg:top-45">
               <TurnInstructionCard
                 direction={
                   (currentInstruction.maneuver?.includes('left')
@@ -217,7 +237,7 @@ function MapLayout() {
           )}
 
           {/* Navigation bottom bar */}
-          <div className="pointer-events-auto absolute bottom-0 left-0 right-0 lg:right-[380px]">
+          <div className="pointer-events-auto absolute bottom-0 left-0 right-0 lg:right-95">
             <NavigationBar />
           </div>
         </div>
@@ -234,6 +254,27 @@ function MapLayout() {
           <HazardDetailSheet />
         </>
       )}
+
+      {/* SOS Popup - works on both mobile and desktop */}
+      <SOSPopup
+        isOpen={state.isSOSPopupOpen}
+        onClose={() => dispatch({ type: 'CLOSE_SOS_POPUP' })}
+        onAddPin={() => {
+          dispatch({ type: 'CLOSE_SOS_POPUP' });
+          dispatch({ type: 'TOGGLE_SOS_PIN_MODE', payload: true });
+        }}
+        onRemovePin={() => {
+          if (state.selectedSOSIndex !== null) {
+            dispatch({ type: 'REMOVE_SOS_PIN', payload: state.selectedSOSIndex });
+          }
+        }}
+        onClearAll={() => dispatch({ type: 'CLEAR_ALL_SOS_PINS' })}
+        selectedLocation={state.selectedSOSIndex !== null ? state.sosLocations[state.selectedSOSIndex] : null}
+        allLocations={state.sosLocations}
+        selectedIndex={state.selectedSOSIndex}
+        onSelectPin={(index) => dispatch({ type: 'SELECT_SOS_PIN', payload: index })}
+        sosEvent={sosEvent}
+      />
     </div>
   );
 }

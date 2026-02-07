@@ -33,8 +33,7 @@ export function AutocompleteInput({
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { predictions, isLoading, search, getPlaceDetails, clearPredictions } =
-    usePlacesAutocomplete();
+  const { predictions, isLoading, search, getPlaceDetails, clearPredictions } = usePlacesAutocomplete();
 
   const showDropdown = isFocused && (predictions.length > 0 || showCurrentLocation);
 
@@ -44,7 +43,7 @@ export function AutocompleteInput({
       setHighlightedIndex(-1);
       search(newValue);
     },
-    [onChange, search]
+    [onChange, search],
   );
 
   const handlePlaceSelect = useCallback(
@@ -59,7 +58,7 @@ export function AutocompleteInput({
         setIsFocused(false);
       }
     },
-    [getPlaceDetails, onPlaceSelect, clearPredictions]
+    [getPlaceDetails, onPlaceSelect, clearPredictions],
   );
 
   const handleCurrentLocation = useCallback(() => {
@@ -142,11 +141,7 @@ export function AutocompleteInput({
           {isLoading ? (
             <Loader2 className="size-4 animate-spin text-[#B8B9B6]" />
           ) : value ? (
-            <button
-              type="button"
-              onClick={handleClear}
-              className="rounded p-0.5 hover:bg-[#3E3E3E]"
-            >
+            <button type="button" onClick={handleClear} className="rounded p-0.5 hover:bg-[#3E3E3E]">
               <X className="size-4 text-[#B8B9B6]" />
             </button>
           ) : null}

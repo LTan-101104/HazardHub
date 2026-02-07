@@ -14,10 +14,7 @@ const api = axios.create({
 /**
  * Create a new SOS event
  */
-export async function createSOSEvent(
-  idToken: string,
-  data: SOSEventDTO
-): Promise<SOSEventDTO> {
+export async function createSOSEvent(idToken: string, data: SOSEventDTO): Promise<SOSEventDTO> {
   try {
     const response = await api.post('/api/v1/sos-events', data, {
       headers: {
@@ -36,10 +33,7 @@ export async function createSOSEvent(
 /**
  * Get an SOS event by ID
  */
-export async function getSOSEventById(
-  idToken: string,
-  id: string
-): Promise<SOSEventDTO | null> {
+export async function getSOSEventById(idToken: string, id: string): Promise<SOSEventDTO | null> {
   try {
     const response = await api.get(`/api/v1/sos-events/${id}`, {
       headers: {
@@ -83,7 +77,7 @@ export async function getAllSOSEvents(idToken: string): Promise<SOSEventDTO[]> {
 export async function getAllSOSEventsPaged(
   idToken: string,
   page: number = 0,
-  size: number = 10
+  size: number = 10,
 ): Promise<PagedResponse<SOSEventDTO>> {
   try {
     const response = await api.get('/api/v1/sos-events/paged', {
@@ -104,11 +98,7 @@ export async function getAllSOSEventsPaged(
 /**
  * Update an existing SOS event
  */
-export async function updateSOSEvent(
-  idToken: string,
-  id: string,
-  data: SOSEventDTO
-): Promise<SOSEventDTO> {
+export async function updateSOSEvent(idToken: string, id: string, data: SOSEventDTO): Promise<SOSEventDTO> {
   try {
     const response = await api.put(`/api/v1/sos-events/${id}`, data, {
       headers: {
@@ -145,10 +135,7 @@ export async function deleteSOSEvent(idToken: string, id: string): Promise<void>
 /**
  * Get all SOS events by user ID
  */
-export async function getSOSEventsByUserId(
-  idToken: string,
-  userId: string
-): Promise<SOSEventDTO[]> {
+export async function getSOSEventsByUserId(idToken: string, userId: string): Promise<SOSEventDTO[]> {
   try {
     const response = await api.get(`/api/v1/sos-events/user/${userId}`, {
       headers: {
@@ -167,10 +154,7 @@ export async function getSOSEventsByUserId(
 /**
  * Get all SOS events by trip ID
  */
-export async function getSOSEventsByTripId(
-  idToken: string,
-  tripId: string
-): Promise<SOSEventDTO[]> {
+export async function getSOSEventsByTripId(idToken: string, tripId: string): Promise<SOSEventDTO[]> {
   try {
     const response = await api.get(`/api/v1/sos-events/trip/${tripId}`, {
       headers: {
@@ -189,10 +173,7 @@ export async function getSOSEventsByTripId(
 /**
  * Get all SOS events by status
  */
-export async function getSOSEventsByStatus(
-  idToken: string,
-  status: SOSEventStatus
-): Promise<SOSEventDTO[]> {
+export async function getSOSEventsByStatus(idToken: string, status: SOSEventStatus): Promise<SOSEventDTO[]> {
   try {
     const response = await api.get(`/api/v1/sos-events/status/${status}`, {
       headers: {
@@ -215,7 +196,7 @@ export async function getSOSEventsByStatusPaged(
   idToken: string,
   status: SOSEventStatus,
   page: number = 0,
-  size: number = 10
+  size: number = 10,
 ): Promise<PagedResponse<SOSEventDTO>> {
   try {
     const response = await api.get(`/api/v1/sos-events/status/${status}/paged`, {
@@ -240,7 +221,7 @@ export async function findNearbySOSEvents(
   idToken: string,
   longitude: number,
   latitude: number,
-  maxDistanceMeters: number
+  maxDistanceMeters: number,
 ): Promise<SOSEventDTO[]> {
   try {
     const response = await api.get('/api/v1/sos-events/nearby', {
@@ -265,7 +246,7 @@ export async function findNearbyActiveSOSEvents(
   idToken: string,
   longitude: number,
   latitude: number,
-  maxDistanceMeters: number
+  maxDistanceMeters: number,
 ): Promise<SOSEventDTO[]> {
   try {
     const response = await api.get('/api/v1/sos-events/nearby/active', {

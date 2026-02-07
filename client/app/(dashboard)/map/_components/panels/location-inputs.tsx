@@ -27,7 +27,7 @@ export function LocationInputs() {
       });
       setFromInputValue(place.text);
     },
-    [dispatch]
+    [dispatch],
   );
 
   const handleToPlaceSelect = useCallback(
@@ -38,7 +38,7 @@ export function LocationInputs() {
       });
       setToInputValue(place.text);
     },
-    [dispatch]
+    [dispatch],
   );
 
   const handleCurrentLocationClick = useCallback(() => {
@@ -56,12 +56,13 @@ export function LocationInputs() {
         },
         (error) => {
           console.error('Geolocation error:', error.code, error.message);
-          const errorMessage = error.code === 1
-            ? 'Location access denied. Please enable location permissions.'
-            : 'Unable to get your location. Please enter a starting point manually.';
+          const errorMessage =
+            error.code === 1
+              ? 'Location access denied. Please enable location permissions.'
+              : 'Unable to get your location. Please enter a starting point manually.';
           dispatch({ type: 'SET_ERROR', payload: errorMessage });
           setFromInputValue('');
-        }
+        },
       );
     }
   }, [dispatch]);

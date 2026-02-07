@@ -105,6 +105,11 @@ export interface MapContextState {
   navigationDistance: string;
   navigationArrival: string;
   error: string | null;
+  // SOS state
+  isSOSPopupOpen: boolean;
+  sosLocations: LatLng[];
+  selectedSOSIndex: number | null;
+  isSOSPinMode: boolean;
 }
 
 export type MapAction =
@@ -123,4 +128,10 @@ export type MapAction =
   | { type: 'SET_HAZARD_ALERT'; payload: boolean }
   | { type: 'SHOW_HAZARD_DETAIL'; payload: boolean }
   | { type: 'TOGGLE_DRAWER'; payload: boolean }
-  | { type: 'SET_ERROR'; payload: string | null };
+  | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'ADD_SOS_PIN'; payload: LatLng }
+  | { type: 'SELECT_SOS_PIN'; payload: number }
+  | { type: 'REMOVE_SOS_PIN'; payload: number }
+  | { type: 'CLEAR_ALL_SOS_PINS' }
+  | { type: 'CLOSE_SOS_POPUP' }
+  | { type: 'TOGGLE_SOS_PIN_MODE'; payload: boolean };

@@ -13,7 +13,7 @@ interface UseDirectionsReturn {
   calculateRoute: (
     origin: LatLng,
     destination: LatLng,
-    options?: { provideAlternatives?: boolean }
+    options?: { provideAlternatives?: boolean },
   ) => Promise<DirectionsResult | null>;
   isReady: boolean;
 }
@@ -88,7 +88,7 @@ export function useDirections(): UseDirectionsReturn {
     async (
       origin: LatLng,
       destination: LatLng,
-      options: { provideAlternatives?: boolean } = {}
+      options: { provideAlternatives?: boolean } = {},
     ): Promise<DirectionsResult | null> => {
       const { provideAlternatives = true } = options;
 
@@ -142,7 +142,7 @@ export function useDirections(): UseDirectionsReturn {
         return null;
       }
     },
-    []
+    [],
   );
 
   return {
