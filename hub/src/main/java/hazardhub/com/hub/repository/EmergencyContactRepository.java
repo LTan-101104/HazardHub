@@ -9,9 +9,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface EmergencyContactRepository extends MongoRepository<EmergencyContact, UUID> {
+public interface EmergencyContactRepository extends MongoRepository<EmergencyContact, String> {
 
     List<EmergencyContact> findByUserIdOrderByPriorityAsc(UUID userId);
 
-    Optional<EmergencyContact> findByIdAndUserId(UUID id, UUID userId);
+    Optional<EmergencyContact> findByIdAndUserId(String id, UUID userId);
 }

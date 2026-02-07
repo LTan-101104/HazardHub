@@ -17,7 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class EmergencyContactDTO {
 
-    private UUID id;
+    private String id;
 
     /** Server-managed — derived from the authenticated principal. */
     private UUID userId;

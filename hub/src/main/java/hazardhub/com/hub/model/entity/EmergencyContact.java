@@ -10,10 +10,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -25,14 +23,11 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
 @Document(collection = "emergency_contacts")
-@CompoundIndex(def = "{'user_id': 1, '_id': 1}")
 public class EmergencyContact extends BaseEntity {
 
     @Id
-    @Builder.Default
-    private UUID id = UUID.randomUUID();
+    private String id;
 
     @NotNull(message = "User ID is required")
     @Indexed

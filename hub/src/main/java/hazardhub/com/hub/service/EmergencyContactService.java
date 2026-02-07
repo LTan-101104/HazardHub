@@ -40,12 +40,12 @@ public class EmergencyContactService {
                 .toList();
     }
 
-    public EmergencyContactDTO getContactById(String uid, UUID contactId) {
+    public EmergencyContactDTO getContactById(String uid, String contactId) {
         EmergencyContact contact = getOwnedContact(uid, contactId);
         return EmergencyContactMapper.toDTO(contact);
     }
 
-    public EmergencyContactDTO updateEmergencyContact(String uid, UUID contactId, UpdateEmergencyContactDTO updates) {
+    public EmergencyContactDTO updateEmergencyContact(String uid, String contactId, UpdateEmergencyContactDTO updates) {
         EmergencyContact contact = getOwnedContact(uid, contactId);
         EmergencyContactMapper.updateEntityFromDTO(updates, contact);
 
@@ -54,17 +54,17 @@ public class EmergencyContactService {
         return EmergencyContactMapper.toDTO(saved);
     }
 
-    public void deleteEmergencyContact(String uid, UUID contactId) {
+    public void deleteEmergencyContact(String uid, String contactId) {
         EmergencyContact contact = getOwnedContact(uid, contactId);
         emergencyContactRepository.delete(contact);
         log.info("Deleted emergency contact {} for user {}", contactId, uid);
     }
 
-    private EmergencyContact getOwnedContact(String uid, UUID contactId) {
+    private EmergencyContact getOwnedContact(String uid, String contactId) {
         UUID userId = toUserUuid(uid);
         return emergencyContactRepository.findByIdAndUserId(contactId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Emergency contact not found with id: " + contactId));
+                        "Emergency contact not found or access denied"));
     }
 
     private UUID toUserUuid(String uid) {

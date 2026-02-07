@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/emergency-contacts")
@@ -43,7 +42,7 @@ public class EmergencyContactController {
     @Operation(summary = "Get one emergency contact for current user")
     public ResponseEntity<EmergencyContactDTO> getContact(
             @AuthenticationPrincipal String uid,
-            @PathVariable UUID contactId) {
+            @PathVariable String contactId) {
         EmergencyContactDTO contact = emergencyContactService.getContactById(uid, contactId);
         return ResponseEntity.ok(contact);
     }
@@ -61,7 +60,7 @@ public class EmergencyContactController {
     @Operation(summary = "Update emergency contact for current user")
     public ResponseEntity<EmergencyContactDTO> updateContact(
             @AuthenticationPrincipal String uid,
-            @PathVariable UUID contactId,
+            @PathVariable String contactId,
             @Valid @RequestBody UpdateEmergencyContactDTO updates) {
         EmergencyContactDTO updated = emergencyContactService.updateEmergencyContact(uid, contactId, updates);
         return ResponseEntity.ok(updated);
@@ -71,7 +70,7 @@ public class EmergencyContactController {
     @Operation(summary = "Delete emergency contact for current user")
     public ResponseEntity<Void> deleteContact(
             @AuthenticationPrincipal String uid,
-            @PathVariable UUID contactId) {
+            @PathVariable String contactId) {
         emergencyContactService.deleteEmergencyContact(uid, contactId);
         return ResponseEntity.noContent().build();
     }
