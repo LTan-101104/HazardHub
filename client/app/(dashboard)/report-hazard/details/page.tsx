@@ -1,21 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  ArrowLeft,
-  Sparkles,
-  ImagePlus,
-  Camera,
-  Upload,
-  TriangleAlert,
-  Send,
-  Loader2,
-} from 'lucide-react';
+import Image from 'next/image';
+import { ArrowLeft, Sparkles, ImagePlus, Camera, Upload, TriangleAlert, Send, Loader2, X } from 'lucide-react';
 import { HazardSeverity } from '@/types';
 import { useReportHazard } from '../_context/report-hazard-context';
 import { useAuth } from '@/context/AuthContext';
 import { createHazardReport } from '@/lib/actions/hazard-action';
+import { uploadHazardImage } from '@/lib/upload-image';
 import { auth } from '@/lib/firebase';
 
 const SEVERITY_MAP = {
@@ -35,7 +28,41 @@ export default function ReportHazardDetailsPage() {
   const [severity, setSeverity] = useState<SeverityKey>('CRITICAL');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setIsUploading(true);
+    setError(null);
+
+    // Show local preview immediately
+    const localUrl = URL.createObjectURL(file);
+    setImagePreview(localUrl);
+
+    try {
+      const downloadUrl = await uploadHazardImage(file, user.id);
+      hazardDispatch({ type: 'SET_IMAGE_URL', payload: downloadUrl });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to upload image';
+      setError(message);
+      setImagePreview(null);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImagePreview(null);
+    hazardDispatch({ type: 'SET_IMAGE_URL', payload: '' });
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
+  };
 
   const handleSeverityChange = (key: SeverityKey) => {
     setSeverity(key);
@@ -67,7 +94,7 @@ export default function ReportHazardDetailsPage() {
         reporterId: user.id,
         longitude: hazardState.longitude,
         latitude: hazardState.latitude,
-        locationAccuracyMeters: hazardState.locationAccuracyMeters ?? 10,
+        locationAccuracyMeters: hazardState.locationAccuracyMeters ?? 10, //set default 10
         address: hazardState.address || undefined,
         severity: SEVERITY_MAP[severity],
         description: notes || 'Hazard reported via HazardHub',
@@ -117,20 +144,57 @@ export default function ReportHazardDetailsPage() {
             </div>
           </div>
 
-          <button className="flex h-40 flex-col items-center justify-center gap-2.5 rounded-2xl border border-[#2E2E2E] bg-[#2E2E2E]">
-            <ImagePlus className="size-9 text-[#B8B9B6]" />
-            <span className="text-sm font-medium text-white">Upload or capture photo</span>
-            <span className="text-xs text-[#B8B9B6]">Tap to browse or take a photo</span>
-          </button>
+          {/* Hidden file inputs */}
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+
+          {imagePreview ? (
+            <div className="relative overflow-hidden rounded-2xl border border-[#2E2E2E]">
+              <Image src={imagePreview} alt="Hazard preview" width={400} height={160} className="h-40 w-full object-cover" />
+              {isUploading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                  <Loader2 className="size-8 animate-spin text-[#FF8400]" />
+                </div>
+              )}
+              <button
+                onClick={handleRemoveImage}
+                className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-black/60 transition-colors hover:bg-black/80"
+              >
+                <X className="size-4 text-white" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex h-40 flex-col items-center justify-center gap-2.5 rounded-2xl border border-[#2E2E2E] bg-[#2E2E2E]"
+            >
+              <ImagePlus className="size-9 text-[#B8B9B6]" />
+              <span className="text-sm font-medium text-white">Upload or capture photo</span>
+              <span className="text-xs text-[#B8B9B6]">Tap to browse or take a photo</span>
+            </button>
+          )}
 
           <div className="flex gap-2.5">
-            <button className="flex h-11 flex-1 items-center justify-center gap-2 rounded-[22px] bg-[#FF8400]">
+            <button
+              onClick={() => cameraInputRef.current?.click()}
+              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-[22px] bg-[#FF8400]"
+            >
               <Camera className="size-4.5 text-[#111111]" />
               <span className="text-sm font-medium text-[#111111]" style={{ fontFamily: 'var(--font-mono)' }}>
                 Capture
               </span>
             </button>
-            <button className="flex h-11 flex-1 items-center justify-center gap-2 rounded-[22px] border border-[#2E2E2E] bg-[#111111]">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-[22px] border border-[#2E2E2E] bg-[#111111]"
+            >
               <Upload className="size-4.5 text-white" />
               <span className="text-sm font-medium text-white" style={{ fontFamily: 'var(--font-mono)' }}>
                 Upload
@@ -142,10 +206,7 @@ export default function ReportHazardDetailsPage() {
         <div className="h-px bg-[#2E2E2E]" />
 
         <div className="flex flex-col gap-3 p-4">
-          <span
-            className="text-[11px] font-semibold tracking-wider text-[#B8B9B6]"
-            style={{ fontFamily: 'var(--font-mono)' }}
-          >
+          <span className="text-[11px] font-semibold tracking-wider text-[#B8B9B6]" style={{ fontFamily: 'var(--font-mono)' }}>
             SEVERITY
           </span>
 

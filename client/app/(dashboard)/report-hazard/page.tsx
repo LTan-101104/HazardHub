@@ -67,10 +67,12 @@ function InstructionBubble() {
 
 function MapInner({
   locationMode,
+  panTarget,
   onCenterChange,
   onLocate,
 }: {
   locationMode: LocationMode;
+  panTarget: { lat: number; lng: number } | null;
   onCenterChange: (lat: number, lng: number) => void;
   onLocate: () => void;
 }) {
@@ -86,6 +88,14 @@ function MapInner({
     });
     return () => google.maps.event.removeListener(listener);
   }, [map, onCenterChange]);
+
+  // Pan to target when search/GPS provides a location
+  useEffect(() => {
+    if (map && panTarget) {
+      map.panTo(panTarget);
+      map.setZoom(16);
+    }
+  }, [map, panTarget]);
 
   return (
     <>
@@ -215,6 +225,7 @@ function ReportHazardContent() {
   const router = useRouter();
   const { state: hazardState, dispatch: hazardDispatch } = useReportHazard();
   const [locationMode, setLocationMode] = useState<LocationMode>('current');
+  const [panTarget, setPanTarget] = useState<{ lat: number; lng: number } | null>(null);
   const mapCenter = useRef<{ lat: number; lng: number }>(DEFAULT_CENTER);
 
   const hasLocation = hazardState.latitude !== null && hazardState.longitude !== null;
@@ -234,6 +245,7 @@ function ReportHazardContent() {
       navigator.geolocation.getCurrentPosition((pos) => {
         const { latitude, longitude, accuracy } = pos.coords;
         mapCenter.current = { lat: latitude, lng: longitude };
+        setPanTarget({ lat: latitude, lng: longitude });
         hazardDispatch({
           type: 'SET_LOCATION',
           payload: { latitude, longitude, accuracy },
@@ -257,6 +269,7 @@ function ReportHazardContent() {
 
   const handlePlaceSelect = useCallback(
     (lat: number, lng: number, address: string) => {
+      setPanTarget({ lat, lng });
       hazardDispatch({
         type: 'SET_LOCATION',
         payload: { latitude: lat, longitude: lng, address },
@@ -281,7 +294,7 @@ function ReportHazardContent() {
           className="h-full w-full"
           {...(MAP_ID ? { mapId: MAP_ID, colorScheme: 'DARK' as const } : { styles: DARK_MAP_STYLES })}
         >
-          <MapInner locationMode={locationMode} onCenterChange={handleCenterChange} onLocate={handleLocate} />
+          <MapInner locationMode={locationMode} panTarget={panTarget} onCenterChange={handleCenterChange} onLocate={handleLocate} />
         </Map>
       </div>
 

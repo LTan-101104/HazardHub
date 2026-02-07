@@ -17,7 +17,7 @@ const api = axios.create({
  */
 export async function registerUser(data: UserRegistration): Promise<void> {
   try {
-    await api.post('/auth/register', data);
+    await api.post('/api/v1/auth/register', data);
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {
       throw new Error(error.response.data.message || 'Registration failed');
@@ -31,7 +31,7 @@ export async function registerUser(data: UserRegistration): Promise<void> {
  */
 export async function fetchCurrentUser(idToken: string) {
   try {
-    const response = await api.get('/auth/me', {
+    const response = await api.get('/api/v1/auth/me', {
       headers: {
         Authorization: `Bearer ${idToken}`,
       },
@@ -47,7 +47,7 @@ export async function fetchCurrentUser(idToken: string) {
  */
 export async function updateUserProfile(idToken: string, data: UserProfileUpdate) {
   try {
-    const response = await api.put('/auth/me', data, {
+    const response = await api.put('/api/v1/auth/me', data, {
       headers: {
         Authorization: `Bearer ${idToken}`,
       },
