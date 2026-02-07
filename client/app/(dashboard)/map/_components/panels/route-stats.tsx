@@ -33,16 +33,8 @@ export function RouteStats() {
             stat.accent ? 'bg-[#222924]' : 'bg-[#2E2E2E]'
           }`}
         >
-          <span
-            className={`font-mono text-sm font-semibold ${
-              stat.accent ? 'text-[#B6FFCE]' : 'text-white'
-            }`}
-          >
-            {stat.value}
-          </span>
-          <span className={`text-[11px] ${stat.accent ? 'text-[#B6FFCE]' : 'text-[#B8B9B6]'}`}>
-            {stat.label}
-          </span>
+          <span className={`font-mono text-sm font-semibold ${stat.accent ? 'text-[#B6FFCE]' : 'text-white'}`}>{stat.value}</span>
+          <span className={`text-[11px] ${stat.accent ? 'text-[#B6FFCE]' : 'text-[#B8B9B6]'}`}>{stat.label}</span>
         </div>
       ))}
     </div>

@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -89,7 +89,6 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-
 }
 
 .dark {
@@ -125,21 +124,21 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 
-    /* Custom HazardHub Colors */
+  /* Custom HazardHub Colors */
   --color-hazard-orange: #ff8400;
   --color-hazard-dark: #1a1a1a;
 
   /* Map-specific semantic colors */
-  --nav-green: #00AA66;
-  --nav-green-foreground: #FFFFFF;
-  --gemini-blue: #4285F4;
-  --gemini-blue-foreground: #FFFFFF;
-  --safety-high: #22C55E;
-  --hazard-card: #1A1A1A;
-  --hazard-border: #2E2E2E;
-  --hazard-surface: #2E2E2E;
-  --hazard-muted: #B8B9B6;
-  --hazard-warning-bg: #291C0F;
+  --nav-green: #00aa66;
+  --nav-green-foreground: #ffffff;
+  --gemini-blue: #4285f4;
+  --gemini-blue-foreground: #ffffff;
+  --safety-high: #22c55e;
+  --hazard-card: #1a1a1a;
+  --hazard-border: #2e2e2e;
+  --hazard-surface: #2e2e2e;
+  --hazard-muted: #b8b9b6;
+  --hazard-warning-bg: #291c0f;
   --color-chat-user-bg: rgba(255, 132, 0, 0.15);
   --color-chat-ai-bg: #242424;
 
@@ -193,7 +192,7 @@
 
   /* Animations */
   --animate-accordion-down: accordion-down 0.2s ease-out;
-  --animate-accordion-up: accordion-up 0.2s ease-out; 
+  --animate-accordion-up: accordion-up 0.2s ease-out;
 }
 
 @keyframes accordion-down {

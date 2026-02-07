@@ -27,10 +27,11 @@ function SOSMarker({ position, index, isSelected, onClick }: SOSMarkerProps) {
     return (
       <AdvancedMarker position={position} onClick={onClick}>
         <div
-          className={`flex items-center justify-center rounded-full shadow-lg transition-all ${isSelected
-            ? 'size-12 bg-red-500 animate-pulse ring-4 ring-red-300'
-            : 'size-10 bg-red-500/80 hover:bg-red-500 hover:scale-110'
-            }`}
+          className={`flex items-center justify-center rounded-full shadow-lg transition-all ${
+            isSelected
+              ? 'size-12 bg-red-500 animate-pulse ring-4 ring-red-300'
+              : 'size-10 bg-red-500/80 hover:bg-red-500 hover:scale-110'
+          }`}
         >
           <span className="text-sm font-bold text-white">{index + 1}</span>
         </div>
@@ -67,10 +68,7 @@ function MapContent({ children }: { children?: React.ReactNode }) {
 
   return (
     <>
-      <RoutePolylines
-        activePath={state.activeRoute?.path}
-        alternatePath={state.alternateRoute?.path}
-      />
+      <RoutePolylines activePath={state.activeRoute?.path} alternatePath={state.alternateRoute?.path} />
       <RouteMarkers origin={state.fromPosition} destination={state.toPosition} />
       {/* SOS Location Markers */}
       {state.sosLocations.map((location, index) => (
@@ -103,10 +101,7 @@ export function GoogleMapView({ children }: GoogleMapViewProps) {
   const sosCursor = 'crosshair';
 
   return (
-    <div
-      className="h-full w-full"
-      style={state.isSOSPinMode ? { cursor: sosCursor } : undefined}
-    >
+    <div className="h-full w-full" style={state.isSOSPinMode ? { cursor: sosCursor } : undefined}>
       <Map
         defaultCenter={DEFAULT_CENTER}
         defaultZoom={DEFAULT_ZOOM}
@@ -116,9 +111,7 @@ export function GoogleMapView({ children }: GoogleMapViewProps) {
         onClick={handleMapClick}
         draggableCursor={state.isSOSPinMode ? sosCursor : undefined}
         draggingCursor={state.isSOSPinMode ? sosCursor : undefined}
-        {...(MAP_ID
-          ? { mapId: MAP_ID, colorScheme: 'DARK' as const }
-          : { styles: DARK_MAP_STYLES })}
+        {...(MAP_ID ? { mapId: MAP_ID, colorScheme: 'DARK' as const } : { styles: DARK_MAP_STYLES })}
       >
         <MapContent>{children}</MapContent>
       </Map>

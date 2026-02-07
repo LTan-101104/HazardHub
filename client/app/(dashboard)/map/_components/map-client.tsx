@@ -45,9 +45,7 @@ function MapLayout() {
         const [primary, ...alternates] = result.routes;
 
         const activeRoute = { ...primary, type: 'safest' as const, safetyPercent: 92 };
-        const alternateRoute = alternates[0]
-          ? { ...alternates[0], type: 'fastest' as const, safetyPercent: 74 }
-          : undefined;
+        const alternateRoute = alternates[0] ? { ...alternates[0], type: 'fastest' as const, safetyPercent: 74 } : undefined;
 
         dispatch({
           type: 'SET_ROUTE',
@@ -78,9 +76,7 @@ function MapLayout() {
       </div>
 
       {/* Dim overlay when hazard detail is open on mobile */}
-      {!isDesktop && state.isHazardDetailOpen && (
-        <div className="absolute inset-0 z-10 bg-black/40" />
-      )}
+      {!isDesktop && state.isHazardDetailOpen && <div className="absolute inset-0 z-10 bg-black/40" />}
 
       {/* SOS Pin Mode Banner */}
       {state.isSOSPinMode && (
@@ -166,7 +162,9 @@ function MapLayout() {
                         ? 'u-turn'
                         : 'straight') as 'left' | 'right' | 'straight' | 'u-turn' | 'arrive'
                 }
-                distanceMiles={Number.isNaN(parseFloat(currentInstruction.distance)) ? 0.1 : parseFloat(currentInstruction.distance)}
+                distanceMiles={
+                  Number.isNaN(parseFloat(currentInstruction.distance)) ? 0.1 : parseFloat(currentInstruction.distance)
+                }
                 streetName={currentInstruction.instruction.replace(/<[^>]*>/g, '').slice(0, 50)}
               />
             </div>

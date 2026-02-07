@@ -20,7 +20,7 @@ interface UseSOSReturn {
     latitude: number,
     longitude: number,
     userId: string,
-    accuracy?: number
+    accuracy?: number,
   ) => Promise<SOSEventDTO | null>;
   resolveSOS: (idToken: string) => Promise<void>;
   clearError: () => void;
@@ -40,7 +40,7 @@ export function useSOS(options: UseSOSOptions = {}): UseSOSReturn {
       latitude: number,
       longitude: number,
       userId: string,
-      accuracy: number = 10
+      accuracy: number = 10,
     ): Promise<SOSEventDTO | null> => {
       setIsLoading(true);
       setError(null);
@@ -60,8 +60,7 @@ export function useSOS(options: UseSOSOptions = {}): UseSOSReturn {
         onSOSCreated?.(createdEvent);
         return createdEvent;
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to trigger SOS';
+        const errorMessage = err instanceof Error ? err.message : 'Failed to trigger SOS';
         setError(errorMessage);
         onError?.(err instanceof Error ? err : new Error(errorMessage));
         return null;
@@ -69,7 +68,7 @@ export function useSOS(options: UseSOSOptions = {}): UseSOSReturn {
         setIsLoading(false);
       }
     },
-    [onSOSCreated, onError]
+    [onSOSCreated, onError],
   );
 
   const resolveSOS = useCallback(
@@ -92,15 +91,14 @@ export function useSOS(options: UseSOSOptions = {}): UseSOSReturn {
         setIsSOSActive(false);
         onSOSResolved?.(updatedEvent);
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to resolve SOS';
+        const errorMessage = err instanceof Error ? err.message : 'Failed to resolve SOS';
         setError(errorMessage);
         onError?.(err instanceof Error ? err : new Error(errorMessage));
       } finally {
         setIsLoading(false);
       }
     },
-    [sosEvent, onSOSResolved, onError]
+    [sosEvent, onSOSResolved, onError],
   );
 
   const clearError = useCallback(() => {

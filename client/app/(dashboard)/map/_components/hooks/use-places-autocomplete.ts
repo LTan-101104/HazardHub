@@ -19,9 +19,7 @@ interface UsePlacesAutocompleteReturn {
   clearPredictions: () => void;
 }
 
-export function usePlacesAutocomplete(
-  options: UsePlacesAutocompleteOptions = {}
-): UsePlacesAutocompleteReturn {
+export function usePlacesAutocomplete(options: UsePlacesAutocompleteOptions = {}): UsePlacesAutocompleteReturn {
   const { debounceMs = 300, minChars = 2 } = options;
 
   const placesLib = useMapsLibrary('places');
@@ -98,11 +96,11 @@ export function usePlacesAutocomplete(
               setError('Failed to fetch predictions');
               setPredictions([]);
             }
-          }
+          },
         );
       }, debounceMs);
     },
-    [debounceMs, minChars]
+    [debounceMs, minChars],
   );
 
   const getPlaceDetails = useCallback(async (placeId: string): Promise<LatLng | null> => {
