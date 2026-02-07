@@ -7,7 +7,7 @@ import { ArrowLeft, Sparkles, ImagePlus, Camera, Upload, TriangleAlert, Send, Lo
 import { HazardSeverity } from '@/types';
 import { useReportHazard } from '../_context/report-hazard-context';
 import { useAuth } from '@/context/AuthContext';
-import { createHazardReport } from '@/lib/actions/hazard-action';
+import { createHazardReport, analyzeHazardImage } from '@/lib/actions/hazard-action';
 import { uploadHazardImage } from '@/lib/upload-image';
 import { auth } from '@/lib/firebase';
 
@@ -29,6 +29,7 @@ export default function ReportHazardDetailsPage() {
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -67,6 +68,32 @@ export default function ReportHazardDetailsPage() {
   const handleSeverityChange = (key: SeverityKey) => {
     setSeverity(key);
     hazardDispatch({ type: 'SET_SEVERITY', payload: SEVERITY_MAP[key] });
+  };
+
+  const handleGeminiVision = async () => {
+    if (!hazardState.imageUrl) {
+      setError('Please upload an image first before using Gemini Vision.');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setError(null);
+
+    try {
+      const currentUser = auth?.currentUser;
+      if (!currentUser) {
+        setError('Authentication session expired. Please sign in again.');
+        return;
+      }
+      const idToken = await currentUser.getIdToken();
+      const description = await analyzeHazardImage(idToken, hazardState.imageUrl);
+      setNotes(description);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Gemini Vision analysis failed';
+      setError(message);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -138,10 +165,18 @@ export default function ReportHazardDetailsPage() {
             <span className="text-[11px] font-semibold tracking-wider text-[#B8B9B6]" style={{ fontFamily: 'var(--font-mono)' }}>
               CAPTURE HAZARD
             </span>
-            <div className="flex items-center gap-1 rounded-xl bg-[#FF8400] px-2 py-0.75">
-              <Sparkles className="size-2.5 text-[#111111]" />
-              <span className="text-[10px] font-medium text-[#111111]">Gemini Vision</span>
-            </div>
+            <button
+              onClick={handleGeminiVision}
+              disabled={isAnalyzing || !hazardState.imageUrl}
+              className="flex items-center gap-1 rounded-xl bg-[#FF8400] px-2 py-0.75 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isAnalyzing ? (
+                <Loader2 className="size-2.5 animate-spin text-[#111111]" />
+              ) : (
+                <Sparkles className="size-2.5 text-[#111111]" />
+              )}
+              <span className="text-[10px] font-medium text-[#111111]">{isAnalyzing ? 'Analyzing...' : 'Gemini Vision'}</span>
+            </button>
           </div>
 
           {/* Hidden file inputs */}
