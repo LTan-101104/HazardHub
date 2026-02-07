@@ -36,3 +36,12 @@ export async function getNearbyHazards(
   });
   return response.data;
 }
+
+export async function createHazardVerification(
+  idToken: string,
+  data: { hazardId: string; userId: string; verificationType: 'CONFIRM' | 'DISPUTE'; comment?: string },
+): Promise<void> {
+  await api.post('/api/v1/hazard-verifications', data, {
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
+}
