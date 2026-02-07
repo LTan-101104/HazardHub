@@ -7,10 +7,12 @@ import hazardhub.com.hub.model.entity.Route;
 import hazardhub.com.hub.repository.RouteRepository;
 import hazardhub.com.hub.service.RouteService;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
+import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -66,35 +68,20 @@ public class RouteServiceImpl implements RouteService {
         routeRepository.deleteById(id);
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>
-     * Implementation detail: uses two atomic
-     * {@code updateMulti}/{@code updateFirst}
-     * calls via {@link MongoTemplate} rather than a read-modify-write cycle,
-     * avoiding
-     * race conditions where concurrent requests could select multiple routes.
-     */
     @Override
     public RouteDTO selectRoute(String id) {
         Route target = routeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Route not found with id: " + id));
 
-        // Atomically deselect all routes for this trip
+        AggregationUpdate update = AggregationUpdate.update()
+                .set("is_selected").toValueOf(
+                        ComparisonOperators.valueOf("$_id").equalToValue(new ObjectId(id)));
+
         mongoTemplate.updateMulti(
-                Query.query(Criteria.where("trip_id").is(target.getTripId())
-                        .and("is_selected").is(true)),
-                new Update().set("is_selected", false),
+                Query.query(Criteria.where("trip_id").is(target.getTripId())),
+                update,
                 Route.class);
 
-        // Atomically select the target route
-        mongoTemplate.updateFirst(
-                Query.query(Criteria.where("_id").is(id)),
-                new Update().set("is_selected", true),
-                Route.class);
-
-        // Re-fetch to return the updated state
         Route selected = routeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Route not found with id: " + id));
         return RouteMapper.toDTO(selected);
