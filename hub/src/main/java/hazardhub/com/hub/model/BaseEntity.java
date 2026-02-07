@@ -9,6 +9,7 @@ import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.Version;
 
 import java.time.Instant;
 
@@ -17,6 +18,9 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 public abstract class BaseEntity {
+
+    @Version
+    private Long version;
 
     @CreatedDate
     private Instant createdAt;
