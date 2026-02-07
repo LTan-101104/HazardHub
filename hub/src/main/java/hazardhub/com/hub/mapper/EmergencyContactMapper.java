@@ -4,7 +4,6 @@ import hazardhub.com.hub.model.dto.EmergencyContactDTO;
 import hazardhub.com.hub.model.dto.UpdateEmergencyContactDTO;
 import hazardhub.com.hub.model.entity.EmergencyContact;
 
-import java.util.Optional;
 import java.util.UUID;
 
 public final class EmergencyContactMapper {
@@ -67,14 +66,6 @@ public final class EmergencyContactMapper {
         }
     }
 
-    /**
-     * Partial-update variant that supports clearing optional fields.
-     * <ul>
-     * <li>{@code Optional} field is {@code null} → field not sent, skip</li>
-     * <li>{@code Optional.empty()} → explicitly cleared, set to {@code null}</li>
-     * <li>{@code Optional.of(value)} → update with the given value</li>
-     * </ul>
-     */
     public static void updateEntityFromDTO(UpdateEmergencyContactDTO dto, EmergencyContact entity) {
         if (dto == null || entity == null) {
             return;
@@ -87,14 +78,12 @@ public final class EmergencyContactMapper {
             entity.setPhone(dto.getPhone());
         }
 
-        Optional<String> email = dto.getEmail();
-        if (email != null) {
-            entity.setEmail(email.orElse(null));
+        if (dto.getEmail() != null) {
+            entity.setEmail(dto.getEmail());
         }
 
-        Optional<String> relationship = dto.getRelationship();
-        if (relationship != null) {
-            entity.setRelationship(relationship.orElse(null));
+        if (dto.getRelationship() != null) {
+            entity.setRelationship(dto.getRelationship());
         }
 
         if (dto.getPriority() != null) {
