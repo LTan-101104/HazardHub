@@ -8,11 +8,7 @@ import {
   ImagePlus,
   Camera,
   Upload,
-  CircleCheck,
-  Zap,
   TriangleAlert,
-  MapPin,
-  Clock3,
   Send,
   Loader2,
 } from 'lucide-react';
@@ -40,23 +36,6 @@ export default function ReportHazardDetailsPage() {
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const gpsDisplay =
-    hazardState.latitude !== null && hazardState.longitude !== null
-      ? `${hazardState.latitude.toFixed(4)}° N, ${hazardState.longitude.toFixed(4)}° W`
-      : 'No location set';
-
-  const timestamp =
-    new Date().toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    }) +
-    ', ' +
-    new Date().toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
 
   const handleSeverityChange = (key: SeverityKey) => {
     setSeverity(key);
@@ -129,10 +108,7 @@ export default function ReportHazardDetailsPage() {
         {/* Capture Section */}
         <div className="flex flex-col gap-3 p-4">
           <div className="flex items-center justify-between">
-            <span
-              className="text-[11px] font-semibold tracking-wider text-[#B8B9B6]"
-              style={{ fontFamily: 'var(--font-mono)' }}
-            >
+            <span className="text-[11px] font-semibold tracking-wider text-[#B8B9B6]" style={{ fontFamily: 'var(--font-mono)' }}>
               CAPTURE HAZARD
             </span>
             <div className="flex items-center gap-1 rounded-xl bg-[#FF8400] px-2 py-0.75">
@@ -165,34 +141,14 @@ export default function ReportHazardDetailsPage() {
 
         <div className="h-px bg-[#2E2E2E]" />
 
-        {/* AI Analysis Section */}
         <div className="flex flex-col gap-3 p-4">
-          <div className="flex items-center justify-between">
-            <span
-              className="text-[11px] font-semibold tracking-wider text-[#B8B9B6]"
-              style={{ fontFamily: 'var(--font-mono)' }}
-            >
-              AI ANALYSIS
-            </span>
-            <div className="flex items-center gap-1.5 rounded-xl bg-[#222924] px-2 py-1">
-              <CircleCheck className="size-3 text-[#B6FFCE]" />
-              <span className="text-[11px] font-medium text-[#B6FFCE]">Analyzed</span>
-            </div>
-          </div>
+          <span
+            className="text-[11px] font-semibold tracking-wider text-[#B8B9B6]"
+            style={{ fontFamily: 'var(--font-mono)' }}
+          >
+            SEVERITY
+          </span>
 
-          <div className="flex flex-col gap-2 rounded-xl bg-[#24100B] p-3.5">
-            <div className="flex items-center gap-2.5">
-              <Zap className="size-5 text-[#FF5C33]" />
-              <span className="text-[15px] font-semibold text-[#FF5C33]" style={{ fontFamily: 'var(--font-mono)' }}>
-                Power Line Down
-              </span>
-            </div>
-            <p className="text-[13px] leading-[1.4] text-[#FF5C33]">
-              Downed power line detected across 2 lanes. High voltage hazard identified.
-            </p>
-          </div>
-
-          {/* Severity Levels */}
           <div className="flex gap-2">
             {(
               [
@@ -210,9 +166,7 @@ export default function ReportHazardDetailsPage() {
                   onClick={() => handleSeverityChange(level.key)}
                   className={`flex h-12 flex-1 items-center justify-center gap-1 rounded-lg border ${styles}`}
                 >
-                  {'icon' in level && level.icon && isActive && (
-                    <TriangleAlert className="size-3.5 text-[#FF5C33]" />
-                  )}
+                  {'icon' in level && level.icon && isActive && <TriangleAlert className="size-3.5 text-[#FF5C33]" />}
                   <span className="text-xs font-medium">{level.label}</span>
                 </button>
               );
@@ -222,44 +176,9 @@ export default function ReportHazardDetailsPage() {
 
         <div className="h-px bg-[#2E2E2E]" />
 
-        {/* Auto-Captured Data */}
-        <div className="flex flex-col gap-3 p-4">
-          <span
-            className="text-[11px] font-semibold tracking-wider text-[#B8B9B6]"
-            style={{ fontFamily: 'var(--font-mono)' }}
-          >
-            AUTO-CAPTURED DATA
-          </span>
-          <div className="flex gap-2.5">
-            <div className="flex flex-1 flex-col gap-1 rounded-[10px] bg-[#2E2E2E] p-3">
-              <div className="flex items-center gap-1.5">
-                <MapPin className="size-3.5 text-[#FF8400]" />
-                <span className="text-[11px] text-[#B8B9B6]">GPS Location</span>
-              </div>
-              <span className="text-[11px] font-medium text-white" style={{ fontFamily: 'var(--font-mono)' }}>
-                {gpsDisplay}
-              </span>
-            </div>
-            <div className="flex flex-1 flex-col gap-1 rounded-[10px] bg-[#2E2E2E] p-3">
-              <div className="flex items-center gap-1.5">
-                <Clock3 className="size-3.5 text-[#FF8400]" />
-                <span className="text-[11px] text-[#B8B9B6]">Timestamp</span>
-              </div>
-              <span className="text-[11px] font-medium text-white" style={{ fontFamily: 'var(--font-mono)' }}>
-                {timestamp}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="h-px bg-[#2E2E2E]" />
-
         {/* Additional Notes */}
         <div className="flex flex-col gap-2.5 px-4 py-3">
-          <span
-            className="text-[11px] font-semibold tracking-wider text-[#B8B9B6]"
-            style={{ fontFamily: 'var(--font-mono)' }}
-          >
+          <span className="text-[11px] font-semibold tracking-wider text-[#B8B9B6]" style={{ fontFamily: 'var(--font-mono)' }}>
             ADDITIONAL NOTES (OPTIONAL)
           </span>
           <textarea
@@ -292,9 +211,7 @@ export default function ReportHazardDetailsPage() {
           ) : (
             <Send className="size-4.5 text-[#111111]" />
           )}
-          <span className="text-[15px] font-semibold text-[#111111]">
-            {isSubmitting ? 'Submitting...' : 'Submit Report'}
-          </span>
+          <span className="text-[15px] font-semibold text-[#111111]">{isSubmitting ? 'Submitting...' : 'Submit Report'}</span>
         </button>
       </div>
     </div>
@@ -307,9 +224,9 @@ function getSeverityStyles(level: SeverityKey, isActive: boolean): string {
   }
   switch (level) {
     case 'LOW':
-      return 'border-[#2E2E2E] bg-[#2E2E2E] text-[#B8B9B6]';
+      return 'border-[#B8B9B6] bg-[#2E2E2E] text-white font-semibold';
     case 'MEDIUM':
-      return 'border-[#2E2E2E] bg-[#2E2E2E] text-[#B8B9B6]';
+      return 'border-[#FFB800] bg-[#2E2508] text-[#FFB800] font-semibold';
     case 'HIGH':
       return 'border-[#FF8400] bg-[#291C0F] text-[#FF8400] font-semibold';
     case 'CRITICAL':
