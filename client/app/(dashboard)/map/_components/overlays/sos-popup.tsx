@@ -117,7 +117,7 @@ export function SOSPopup({
   };
 
   // Derive broadcasting state from SOS status
-  const isBroadcasting = sosEvent?.status !== SOSEventStatus.RESOLVED;
+  const isBroadcasting = !!sosEvent && sosEvent.status !== SOSEventStatus.RESOLVED;
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -334,9 +334,8 @@ export function SOSPopup({
                 >
                   <Checkbox
                     checked={item.checked}
-                    onCheckedChange={() => toggleCheckItem(item.id)}
                     className={cn(
-                      'size-5 rounded border-2',
+                      'size-5 rounded border-2 pointer-events-none',
                       item.checked ? 'border-green-500 bg-green-500 data-[state=checked]:bg-green-500' : 'border-gray-500',
                     )}
                   />
