@@ -4,14 +4,12 @@ import hazardhub.com.hub.model.dto.EmergencyContactDTO;
 import hazardhub.com.hub.model.dto.UpdateEmergencyContactDTO;
 import hazardhub.com.hub.model.entity.EmergencyContact;
 
-import java.util.UUID;
-
 public final class EmergencyContactMapper {
 
     private EmergencyContactMapper() {
     }
 
-    public static EmergencyContact toEntity(EmergencyContactDTO dto, UUID userId) {
+    public static EmergencyContact toEntity(EmergencyContactDTO dto, String userId) {
         if (dto == null) {
             return null;
         }

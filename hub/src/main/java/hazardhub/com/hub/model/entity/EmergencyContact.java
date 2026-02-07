@@ -18,8 +18,6 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.util.UUID;
-
 @Data
 @SuperBuilder
 @NoArgsConstructor
@@ -34,7 +32,7 @@ public class EmergencyContact extends BaseEntity {
     @NotNull(message = "User ID is required")
     @Indexed
     @Field("user_id")
-    private UUID userId;
+    private String userId;
 
     @NotBlank(message = "Name is required")
     @Size(max = 100, message = "Name must be at most 100 characters")

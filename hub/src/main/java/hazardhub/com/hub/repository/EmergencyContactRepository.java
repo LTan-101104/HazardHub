@@ -6,12 +6,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Repository
 public interface EmergencyContactRepository extends MongoRepository<EmergencyContact, String> {
 
-    List<EmergencyContact> findByUserIdOrderByPriorityAsc(UUID userId);
+    List<EmergencyContact> findByUserIdOrderByPriorityAsc(String userId);
 
-    Optional<EmergencyContact> findByIdAndUserId(String id, UUID userId);
+    Optional<EmergencyContact> findByIdAndUserId(String id, String userId);
 }

@@ -12,9 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -22,11 +20,10 @@ import java.util.UUID;
 @Profile("!test")
 public class EmergencyContactService {
 
-    private static final String USER_ID_NAMESPACE = "firebase-user:";
     private final EmergencyContactRepository emergencyContactRepository;
 
     public EmergencyContactDTO createEmergencyContact(String uid, EmergencyContactDTO request) {
-        UUID userId = toUserUuid(uid);
+        String userId = validateUserId(uid);
         EmergencyContact contact = EmergencyContactMapper.toEntity(request, userId);
         EmergencyContact saved = emergencyContactRepository.save(contact);
         log.info("Created emergency contact {} for user {}", saved.getId(), uid);
@@ -34,7 +31,7 @@ public class EmergencyContactService {
     }
 
     public List<EmergencyContactDTO> getContactsByUserId(String uid) {
-        UUID userId = toUserUuid(uid);
+        String userId = validateUserId(uid);
         return emergencyContactRepository.findByUserIdOrderByPriorityAsc(userId).stream()
                 .map(EmergencyContactMapper::toDTO)
                 .toList();
@@ -61,16 +58,16 @@ public class EmergencyContactService {
     }
 
     private EmergencyContact getOwnedContact(String uid, String contactId) {
-        UUID userId = toUserUuid(uid);
+        String userId = validateUserId(uid);
         return emergencyContactRepository.findByIdAndUserId(contactId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Emergency contact not found or access denied"));
     }
 
-    private UUID toUserUuid(String uid) {
+    private String validateUserId(String uid) {
         if (uid == null || uid.isBlank()) {
             throw new BadRequestException("Authenticated user id is missing");
         }
-        return UUID.nameUUIDFromBytes((USER_ID_NAMESPACE + uid).getBytes(StandardCharsets.UTF_8));
+        return uid;
     }
 }
