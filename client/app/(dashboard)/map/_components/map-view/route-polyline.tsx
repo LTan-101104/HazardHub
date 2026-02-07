@@ -12,13 +12,7 @@ interface RoutePolylineProps {
   strokeOpacity?: number;
 }
 
-export function RoutePolyline({
-  path,
-  isActive = true,
-  strokeColor,
-  strokeWeight,
-  strokeOpacity,
-}: RoutePolylineProps) {
+export function RoutePolyline({ path, isActive = true, strokeColor, strokeWeight, strokeOpacity }: RoutePolylineProps) {
   const map = useMap();
 
   const polylineOptions = useMemo(() => {
@@ -63,9 +57,7 @@ interface RoutePolylinesProps {
 export function RoutePolylines({ activePath, alternatePath }: RoutePolylinesProps) {
   return (
     <>
-      {alternatePath && alternatePath.length > 0 && (
-        <RoutePolyline path={alternatePath} isActive={false} />
-      )}
+      {alternatePath && alternatePath.length > 0 && <RoutePolyline path={alternatePath} isActive={false} />}
       {activePath && activePath.length > 0 && <RoutePolyline path={activePath} isActive={true} />}
     </>
   );

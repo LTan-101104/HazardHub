@@ -14,8 +14,7 @@ export function SearchBar() {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { predictions, isLoading, search, getPlaceDetails, clearPredictions } =
-    usePlacesAutocomplete();
+  const { predictions, isLoading, search, getPlaceDetails, clearPredictions } = usePlacesAutocomplete();
 
   const showDropdown = isExpanded && predictions.length > 0;
 
@@ -25,7 +24,7 @@ export function SearchBar() {
       setHighlightedIndex(-1);
       search(value);
     },
-    [search]
+    [search],
   );
 
   const handlePlaceSelect = useCallback(
@@ -50,15 +49,16 @@ export function SearchBar() {
             },
             (error) => {
               console.error('Geolocation error:', error.code, error.message);
-              const errorMessage = error.code === 1
-                ? 'Location access denied. Please enable location permissions.'
-                : 'Unable to get your location. Please enter a starting point manually.';
+              const errorMessage =
+                error.code === 1
+                  ? 'Location access denied. Please enable location permissions.'
+                  : 'Unable to get your location. Please enter a starting point manually.';
               dispatch({ type: 'SET_ERROR', payload: errorMessage });
               dispatch({
                 type: 'SET_FROM_LOCATION',
                 payload: { text: '', position: null },
               });
-            }
+            },
           );
         }
 
@@ -67,7 +67,7 @@ export function SearchBar() {
         setIsExpanded(false);
       }
     },
-    [getPlaceDetails, dispatch, clearPredictions]
+    [getPlaceDetails, dispatch, clearPredictions],
   );
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -169,9 +169,7 @@ export function SearchBar() {
               onClick={() => handlePlaceSelect(prediction)}
               className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
                 highlightedIndex === index ? 'bg-[#2E2E2E]' : 'hover:bg-[#2E2E2E]'
-              } ${index === 0 ? 'rounded-t-2xl' : ''} ${
-                index === predictions.length - 1 ? 'rounded-b-2xl' : ''
-              }`}
+              } ${index === 0 ? 'rounded-t-2xl' : ''} ${index === predictions.length - 1 ? 'rounded-b-2xl' : ''}`}
             >
               <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#3E3E3E]">
                 <MapPin className="size-4 text-[#B8B9B6]" />

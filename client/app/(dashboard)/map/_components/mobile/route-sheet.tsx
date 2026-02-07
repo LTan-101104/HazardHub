@@ -15,10 +15,7 @@ export function RouteSheet() {
         if (!open) dispatch({ type: 'SET_VIEW_STATE', payload: 'browse' });
       }}
     >
-      <SheetContent
-        side="bottom"
-        className="rounded-t-3xl border-t border-[#2E2E2E] bg-[#1A1A1A] p-0 [&>button]:hidden"
-      >
+      <SheetContent side="bottom" className="rounded-t-3xl border-t border-[#2E2E2E] bg-[#1A1A1A] p-0 [&>button]:hidden">
         <VisuallyHidden>
           <SheetTitle>Route Information</SheetTitle>
         </VisuallyHidden>

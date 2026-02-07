@@ -25,6 +25,11 @@ const initialState: MapContextState = {
   navigationDistance: '',
   navigationArrival: '',
   error: null,
+  // SOS state
+  isSOSPopupOpen: false,
+  sosLocations: [],
+  selectedSOSIndex: null,
+  isSOSPinMode: false,
 };
 
 function mapReducer(state: MapContextState, action: MapAction): MapContextState {
@@ -108,6 +113,35 @@ function mapReducer(state: MapContextState, action: MapAction): MapContextState 
       return { ...state, isDrawerOpen: action.payload };
     case 'SET_ERROR':
       return { ...state, error: action.payload };
+    case 'ADD_SOS_PIN':
+      return {
+        ...state,
+        sosLocations: [...state.sosLocations, action.payload],
+        selectedSOSIndex: state.sosLocations.length,
+        isSOSPopupOpen: true,
+        isSOSPinMode: false,
+      };
+    case 'SELECT_SOS_PIN':
+      return {
+        ...state,
+        selectedSOSIndex: action.payload,
+        isSOSPopupOpen: true,
+      };
+    case 'REMOVE_SOS_PIN': {
+      const newLocations = state.sosLocations.filter((_, i) => i !== action.payload);
+      return {
+        ...state,
+        sosLocations: newLocations,
+        selectedSOSIndex: newLocations.length > 0 ? Math.min(action.payload, newLocations.length - 1) : null,
+        isSOSPopupOpen: newLocations.length > 0,
+      };
+    }
+    case 'CLEAR_ALL_SOS_PINS':
+      return { ...state, sosLocations: [], selectedSOSIndex: null, isSOSPopupOpen: false };
+    case 'CLOSE_SOS_POPUP':
+      return { ...state, isSOSPopupOpen: false };
+    case 'TOGGLE_SOS_PIN_MODE':
+      return { ...state, isSOSPinMode: action.payload };
     default:
       return state;
   }
