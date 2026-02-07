@@ -3,7 +3,7 @@ export interface User {
   email: string;
   phone?: string | null;
   displayName: string;
-  insuranceDispatchConfig?: Record | null;
+  insuranceDispatchConfig?: Record<string, unknown> | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
