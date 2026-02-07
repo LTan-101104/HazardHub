@@ -3,6 +3,10 @@ export interface LatLng {
   lng: number;
 }
 
+export interface SOSPin extends LatLng {
+  eventId?: string;
+}
+
 export interface PlaceResult {
   placeId: string;
   description: string;
@@ -106,7 +110,7 @@ export interface MapContextState {
   error: string | null;
   // SOS state
   isSOSPopupOpen: boolean;
-  sosLocations: LatLng[];
+  sosLocations: SOSPin[];
   selectedSOSIndex: number | null;
   isSOSPinMode: boolean;
 }
@@ -128,7 +132,9 @@ export type MapAction =
   | { type: 'SHOW_HAZARD_DETAIL'; payload: boolean }
   | { type: 'TOGGLE_DRAWER'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
-  | { type: 'ADD_SOS_PIN'; payload: LatLng }
+  | { type: 'ADD_SOS_PIN'; payload: SOSPin }
+  | { type: 'SET_SOS_PINS'; payload: SOSPin[] }
+  | { type: 'SET_SOS_PIN_EVENT_ID'; payload: { index: number; eventId: string } }
   | { type: 'SELECT_SOS_PIN'; payload: number }
   | { type: 'REMOVE_SOS_PIN'; payload: number }
   | { type: 'CLEAR_ALL_SOS_PINS' }
