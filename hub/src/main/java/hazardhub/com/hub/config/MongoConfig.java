@@ -1,6 +1,7 @@
 package hazardhub.com.hub.config;
 
 import hazardhub.com.hub.model.entity.Hazard;
+import hazardhub.com.hub.model.entity.SOSEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -31,7 +32,7 @@ public class MongoConfig {
     }
 
     @EventListener(ApplicationReadyEvent.class)
-    public void initIndexesAfterStartup() {
+    public void initHazardIndexesAfterStartup() {
         IndexOperations indexOps = mongoTemplate.indexOps(Hazard.class);
 
         boolean locationIndexExists = indexOps.getIndexInfo().stream()
@@ -43,6 +44,22 @@ public class MongoConfig {
             log.info("Created 2dsphere index on 'location' field for Hazard collection");
         } else {
             log.info("Index on 'location' field already exists for Hazard collection");
+        }
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void initSOSEventIndexesAfterStartup() {
+        IndexOperations indexOps = mongoTemplate.indexOps(SOSEvent.class);
+
+        boolean locationIndexExists = indexOps.getIndexInfo().stream()
+                .anyMatch(indexInfo -> indexInfo.getIndexFields().stream()
+                        .anyMatch(field -> "location".equals(field.getKey())));
+
+        if (!locationIndexExists) {
+            indexOps.createIndex(new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_2DSPHERE));
+            log.info("Created 2dsphere index on 'location' field for SOSEvent collection");
+        } else {
+            log.info("Index on 'location' field already exists for SOSEvent collection");
         }
     }
 }

@@ -1,7 +1,7 @@
 package hazardhub.com.hub.service;
 
 import hazardhub.com.hub.model.dto.HazardDTO;
-import hazardhub.com.hub.model.entity.Hazard;
+// import hazardhub.com.hub.model.entity.Hazard;
 import hazardhub.com.hub.model.enums.HazardStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
