@@ -1,6 +1,8 @@
 package hazardhub.com.hub.model.dto;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -37,6 +39,8 @@ public class EmergencyContactDTO {
     @Size(max = 50, message = "Relationship must be at most 50 characters")
     private String relationship;
 
+    @Min(value = 1, message = "Priority must be at least 1")
+    @Max(value = 100, message = "Priority must be at most 100")
     @Builder.Default
     private Integer priority = 1;
 
