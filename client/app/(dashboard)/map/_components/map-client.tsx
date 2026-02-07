@@ -14,7 +14,7 @@ import { ChatSheet } from './mobile/chat-sheet';
 import { HazardDetailSheet } from './mobile/hazard-detail-sheet';
 import { TurnInstructionCard } from './navigation/turn-instruction-card';
 import { NavigationBar } from './navigation/navigation-bar';
-import { DEFAULT_CENTER } from '@/lib/constants/map-config';
+import { DEFAULT_CENTER, HAZARD_SEARCH_RADIUS_METERS } from '@/lib/constants/map-config';
 import { useIsDesktop } from '@/lib/hooks/use-media-query';
 import { useDirections } from './hooks/use-directions';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -55,8 +55,8 @@ function MapLayout() {
         const currentUser = auth?.currentUser;
         if (!currentUser) return;
         const idToken = await currentUser.getIdToken();
-        console.log('Fetching hazards at:', { lat, lng, maxDistance: 5000000 });
-        const dtos = await getNearbyHazards(idToken, lng, lat, 5000000);
+        console.log('Fetching hazards at:', { lat, lng, maxDistance: HAZARD_SEARCH_RADIUS_METERS });
+        const dtos = await getNearbyHazards(idToken, lng, lat, HAZARD_SEARCH_RADIUS_METERS);
         console.log('Hazard DTOs received:', dtos.length, dtos);
         setHazards(dtos.map(dtoToMarker));
       } catch (err) {

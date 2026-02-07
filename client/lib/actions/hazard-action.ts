@@ -45,3 +45,34 @@ export async function createHazardVerification(
     headers: { Authorization: `Bearer ${idToken}` },
   });
 }
+
+/**
+ * Get the current user's verification for a specific hazard.
+ * Returns the verification DTO if found, or null if the user hasn't verified yet (404).
+ */
+export async function getUserHazardVerification(
+  idToken: string,
+  hazardId: string,
+  userId: string,
+): Promise<{ id: string; verificationType: 'CONFIRM' | 'DISPUTE' } | null> {
+  try {
+    const response = await api.get(`/api/v1/hazard-verifications/hazard/${hazardId}/user/${userId}`, {
+      headers: { Authorization: `Bearer ${idToken}` },
+    });
+    return response.data;
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err) && err.response?.status === 404) {
+      return null;
+    }
+    throw err;
+  }
+}
+
+/**
+ * Delete a hazard verification by its ID.
+ */
+export async function deleteHazardVerification(idToken: string, verificationId: string): Promise<void> {
+  await api.delete(`/api/v1/hazard-verifications/${verificationId}`, {
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
+}

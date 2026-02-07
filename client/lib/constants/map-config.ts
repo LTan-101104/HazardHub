@@ -1,11 +1,16 @@
 import type { LatLng, HazardMarker, RouteInfo, WeatherInfo, ChatMessage } from '@/types/map';
 
+export const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
+export const GOOGLE_MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAP_ID;
+
 export const DEFAULT_CENTER: LatLng = {
   lat: 40.7128,
   lng: -74.006,
 };
 
 export const DEFAULT_ZOOM = 14;
+
+export const HAZARD_SEARCH_RADIUS_METERS = 50_000; // 50 km
 
 export const DARK_MAP_STYLES = [
   { elementType: 'geometry', stylers: [{ color: '#1a2633' }] },

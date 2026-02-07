@@ -4,12 +4,9 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Search, Plus, Minus, Crosshair, MapPin, Check, Loader2 } from 'lucide-react';
 import { APIProvider, Map, useMap as useGoogleMap, AdvancedMarker } from '@vis.gl/react-google-maps';
-import { DEFAULT_CENTER, DEFAULT_ZOOM, DARK_MAP_STYLES } from '@/lib/constants/map-config';
+import { GOOGLE_MAPS_API_KEY, GOOGLE_MAP_ID, DEFAULT_CENTER, DEFAULT_ZOOM, DARK_MAP_STYLES } from '@/lib/constants/map-config';
 import { usePlacesAutocomplete } from '../map/_components/hooks/use-places-autocomplete';
 import { useReportHazard } from './_context/report-hazard-context';
-
-const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
-const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAP_ID;
 
 type LocationMode = 'current' | 'pin';
 
@@ -296,7 +293,7 @@ function ReportHazardContent() {
           gestureHandling="greedy"
           disableDefaultUI
           className="h-full w-full"
-          {...(MAP_ID ? { mapId: MAP_ID, colorScheme: 'DARK' as const } : { styles: DARK_MAP_STYLES })}
+          {...(GOOGLE_MAP_ID ? { mapId: GOOGLE_MAP_ID, colorScheme: 'DARK' as const } : { styles: DARK_MAP_STYLES })}
         >
           <MapInner
             locationMode={locationMode}
@@ -398,7 +395,7 @@ function ReportHazardContent() {
 }
 
 export default function ReportHazardPage() {
-  if (!API_KEY) {
+  if (!GOOGLE_MAPS_API_KEY) {
     return (
       <div className="flex h-dvh w-full items-center justify-center bg-[#111111]">
         <div className="text-center text-sm text-[#B8B9B6]">
@@ -410,7 +407,7 @@ export default function ReportHazardPage() {
   }
 
   return (
-    <APIProvider apiKey={API_KEY}>
+    <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
       <ReportHazardContent />
     </APIProvider>
   );
