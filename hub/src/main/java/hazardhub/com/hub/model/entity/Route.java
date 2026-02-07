@@ -8,7 +8,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -21,12 +21,12 @@ import java.util.Map;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Document(collection = "routes")
+@CompoundIndex(def = "{'trip_id': 1, 'is_selected': 1}")
 public class Route extends BaseEntity {
 
     @Id
     private String id;
 
-    @Indexed
     @Field("trip_id")
     private String tripId;
 
