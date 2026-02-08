@@ -60,6 +60,26 @@ export interface SOSEventDTO {
   dispatchReference?: string;
 }
 
+// Hazard DTO interface
+export interface HazardDTO {
+  id?: string;
+  reporterId: string;
+  expiresAt?: string;
+  longitude: number;
+  latitude: number;
+  locationAccuracyMeters: number;
+  address?: string;
+  severity: HazardSeverity;
+  description: string;
+  imageUrl?: string;
+  thumbnailUrl?: string;
+  status?: HazardStatus;
+  verificationCount?: number;
+  disputeCount?: number;
+  disabledAt?: string;
+  affectedRadiusMeters: number;
+}
+
 // Paginated response interface
 export interface PagedResponse<T> {
   content: T[];
@@ -70,7 +90,6 @@ export interface PagedResponse<T> {
   first: boolean;
   last: boolean;
 }
-
 
 //Hazard types
 export enum HazardSeverity {
@@ -103,4 +122,33 @@ export interface HazardDTO {
   disputeCount?: number;
   disabledAt?: string;
   affectedRadiusMeters: number;
+}
+
+export interface SavedLocationDTO {
+  id?: string;
+  userId: string;
+  name: string;
+  longitude: number;
+  latitude: number;
+  address?: string;
+}
+
+export interface EmergencyContactDTO {
+  id?: string;
+  userId?: string; // Server-managed, derived from JWT
+  name: string;
+  phone: string;
+  email?: string;
+  relationship?: string;
+  priority?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface UpdateEmergencyContactDTO {
+  name?: string;
+  phone?: string;
+  email?: string;
+  relationship?: string;
+  priority?: number;
 }

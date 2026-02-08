@@ -69,6 +69,7 @@ const emergencyServices = [
   },
 ];
 
+// TODO: add the emergency contacts from safety profile and option to call them directly from here
 export function SOSPopup({
   isOpen,
   onClose,

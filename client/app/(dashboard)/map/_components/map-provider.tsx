@@ -121,6 +121,22 @@ function mapReducer(state: MapContextState, action: MapAction): MapContextState 
         isSOSPopupOpen: true,
         isSOSPinMode: false,
       };
+    case 'SET_SOS_PINS':
+      return {
+        ...state,
+        sosLocations: action.payload,
+        selectedSOSIndex: action.payload.length > 0 ? 0 : null,
+      };
+    case 'SET_SOS_PIN_EVENT_ID': {
+      const updatedLocations = [...state.sosLocations];
+      if (action.payload.index < updatedLocations.length) {
+        updatedLocations[action.payload.index] = {
+          ...updatedLocations[action.payload.index],
+          eventId: action.payload.eventId,
+        };
+      }
+      return { ...state, sosLocations: updatedLocations };
+    }
     case 'SELECT_SOS_PIN':
       return {
         ...state,

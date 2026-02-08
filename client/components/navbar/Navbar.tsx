@@ -53,21 +53,21 @@ const dashboardItems = [
   {
     title: 'Safety Profile',
     icon: Shield,
-    href: '/profile',
+    href: '/safety-profile',
     requiresAuth: true,
   },
-  {
-    title: 'Hazard Tracker',
-    icon: Activity,
-    href: '/hazard-tracker',
-    requiresAuth: true,
-  },
-  {
-    title: 'Trip History',
-    icon: Clock,
-    href: '/trip-history',
-    requiresAuth: true,
-  },
+  // {
+  //   title: 'Hazard Tracker',
+  //   icon: Activity,
+  //   href: '/hazard-tracker',
+  //   requiresAuth: true,
+  // },
+  // {
+  //   title: 'Trip History',
+  //   icon: Clock,
+  //   href: '/trip-history',
+  //   requiresAuth: true,
+  // },
 ];
 
 // Settings items

@@ -19,11 +19,14 @@ import { DEFAULT_CENTER, HAZARD_SEARCH_RADIUS_METERS } from '@/lib/constants/map
 import { useIsDesktop } from '@/lib/hooks/use-media-query';
 import { useDirections } from './hooks/use-directions';
 import { useSOS } from './hooks/use-sos';
+import { useAuth } from '@/context/AuthContext';
+import { auth } from '@/lib/firebase';
+import { getSOSEventsByUserId, deleteSOSEvent } from '@/lib/actions/sos-action';
+import { SOSEventStatus } from '@/types';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
 import { getNearbyHazards } from '@/lib/actions/hazard-action';
-import { useAuth } from '@/context/AuthContext';
-import { auth } from '@/lib/firebase';
+
 import type { HazardMarker, HazardSeverity } from '@/types/map';
 import type { HazardDTO } from '@/types';
 
@@ -52,7 +55,56 @@ function MapLayout() {
   const isDesktop = useIsDesktop();
   const { calculateRoute, isReady } = useDirections();
   const isCalculatingRef = useRef(false);
-  const { sosEvent } = useSOS();
+  const { sosEvent, triggerSOS } = useSOS();
+
+  const prevSOSCountRef = useRef(0);
+  const hasLoadedSOSRef = useRef(false);
+
+  // Load existing SOS events from the backend on mount
+  useEffect(() => {
+    if (!user?.id || !auth?.currentUser || hasLoadedSOSRef.current) return;
+    hasLoadedSOSRef.current = true;
+
+    auth.currentUser.getIdToken().then((idToken) => {
+      getSOSEventsByUserId(idToken, user.id)
+        .then((events) => {
+          const activeEvents = events.filter((e) => e.status !== SOSEventStatus.RESOLVED);
+          if (activeEvents.length > 0) {
+            const pins = activeEvents.map((e) => ({
+              lat: e.latitude,
+              lng: e.longitude,
+              eventId: e.id,
+            }));
+            dispatch({ type: 'SET_SOS_PINS', payload: pins });
+            prevSOSCountRef.current = pins.length;
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to load SOS events:', err);
+        });
+    });
+  }, [user, dispatch]);
+
+  // When a new SOS pin is added, persist it to the backend
+  useEffect(() => {
+    const currentCount = state.sosLocations.length;
+    if (currentCount > prevSOSCountRef.current && user?.id && auth?.currentUser) {
+      // A new pin was just added — it's always the last element
+      const newPinIndex = currentCount - 1;
+      const newPin = state.sosLocations[newPinIndex];
+      auth.currentUser.getIdToken().then(async (idToken) => {
+        try {
+          const created = await triggerSOS(idToken, newPin.lat, newPin.lng, user.id);
+          if (created?.id) {
+            dispatch({ type: 'SET_SOS_PIN_EVENT_ID', payload: { index: newPinIndex, eventId: created.id } });
+          }
+        } catch (err) {
+          console.error('Failed to persist SOS event:', err);
+        }
+      });
+    }
+    prevSOSCountRef.current = currentCount;
+  }, [state.sosLocations, user, triggerSOS, dispatch]);
   const [hazards, setHazards] = useState<HazardMarker[]>([]);
 
   // Fetch nearby hazards once user is authenticated
@@ -263,10 +315,33 @@ function MapLayout() {
         }}
         onRemovePin={() => {
           if (state.selectedSOSIndex !== null) {
+            const pin = state.sosLocations[state.selectedSOSIndex];
+            // Delete from backend if it has an eventId
+            if (pin?.eventId && auth?.currentUser) {
+              auth.currentUser.getIdToken().then((idToken) => {
+                deleteSOSEvent(idToken, pin.eventId!).catch((err) => {
+                  console.error('Failed to delete SOS event:', err);
+                });
+              });
+            }
             dispatch({ type: 'REMOVE_SOS_PIN', payload: state.selectedSOSIndex });
           }
         }}
-        onClearAll={() => dispatch({ type: 'CLEAR_ALL_SOS_PINS' })}
+        onClearAll={() => {
+          // Delete all from backend
+          if (auth?.currentUser && state.sosLocations.length > 0) {
+            auth.currentUser.getIdToken().then((idToken) => {
+              state.sosLocations.forEach((pin) => {
+                if (pin.eventId) {
+                  deleteSOSEvent(idToken, pin.eventId).catch((err) => {
+                    console.error('Failed to delete SOS event:', err);
+                  });
+                }
+              });
+            });
+          }
+          dispatch({ type: 'CLEAR_ALL_SOS_PINS' });
+        }}
         selectedLocation={state.selectedSOSIndex !== null ? state.sosLocations[state.selectedSOSIndex] : null}
         allLocations={state.sosLocations}
         selectedIndex={state.selectedSOSIndex}

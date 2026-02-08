@@ -81,10 +81,7 @@ export async function deleteHazardVerification(idToken: string, verificationId: 
  * Analyze a hazard image using Gemini Vision AI.
  * Returns an AI-generated description of the hazard.
  */
-export async function analyzeHazardImage(
-  idToken: string,
-  imageUrl: string,
-): Promise<string> {
+export async function analyzeHazardImage(idToken: string, imageUrl: string): Promise<string> {
   const response = await api.post<{ description: string }>(
     '/api/v1/ai/analyze-hazard-image',
     { imageUrl },
