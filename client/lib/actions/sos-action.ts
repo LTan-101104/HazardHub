@@ -16,7 +16,7 @@ const api = axios.create({
  */
 export async function createSOSEvent(idToken: string, data: SOSEventDTO): Promise<SOSEventDTO> {
   try {
-    const response = await api.post('/sos-events', data, {
+    const response = await api.post('/api/v1/sos-events', data, {
       headers: {
         Authorization: `Bearer ${idToken}`,
       },
@@ -35,7 +35,7 @@ export async function createSOSEvent(idToken: string, data: SOSEventDTO): Promis
  */
 export async function getSOSEventById(idToken: string, id: string): Promise<SOSEventDTO | null> {
   try {
-    const response = await api.get(`/sos-events/${id}`, {
+    const response = await api.get(`/api/v1/sos-events/${id}`, {
       headers: {
         Authorization: `Bearer ${idToken}`,
       },
@@ -57,7 +57,7 @@ export async function getSOSEventById(idToken: string, id: string): Promise<SOSE
  */
 export async function getAllSOSEvents(idToken: string): Promise<SOSEventDTO[]> {
   try {
-    const response = await api.get('/sos-events', {
+    const response = await api.get('/api/v1/sos-events', {
       headers: {
         Authorization: `Bearer ${idToken}`,
       },
@@ -80,7 +80,7 @@ export async function getAllSOSEventsPaged(
   size: number = 10,
 ): Promise<PagedResponse<SOSEventDTO>> {
   try {
-    const response = await api.get('/sos-events/paged', {
+    const response = await api.get('/api/v1/sos-events/paged', {
       params: { page, size },
       headers: {
         Authorization: `Bearer ${idToken}`,
@@ -100,7 +100,7 @@ export async function getAllSOSEventsPaged(
  */
 export async function updateSOSEvent(idToken: string, id: string, data: SOSEventDTO): Promise<SOSEventDTO> {
   try {
-    const response = await api.put(`/sos-events/${id}`, data, {
+    const response = await api.put(`/api/v1/sos-events/${id}`, data, {
       headers: {
         Authorization: `Bearer ${idToken}`,
       },
@@ -119,7 +119,7 @@ export async function updateSOSEvent(idToken: string, id: string, data: SOSEvent
  */
 export async function deleteSOSEvent(idToken: string, id: string): Promise<void> {
   try {
-    await api.delete(`/sos-events/${id}`, {
+    await api.delete(`/api/v1/sos-events/${id}`, {
       headers: {
         Authorization: `Bearer ${idToken}`,
       },
@@ -137,7 +137,7 @@ export async function deleteSOSEvent(idToken: string, id: string): Promise<void>
  */
 export async function getSOSEventsByUserId(idToken: string, userId: string): Promise<SOSEventDTO[]> {
   try {
-    const response = await api.get(`/sos-events/user/${userId}`, {
+    const response = await api.get(`/api/v1/sos-events/user/${userId}`, {
       headers: {
         Authorization: `Bearer ${idToken}`,
       },
@@ -156,7 +156,7 @@ export async function getSOSEventsByUserId(idToken: string, userId: string): Pro
  */
 export async function getSOSEventsByTripId(idToken: string, tripId: string): Promise<SOSEventDTO[]> {
   try {
-    const response = await api.get(`/sos-events/trip/${tripId}`, {
+    const response = await api.get(`/api/v1/sos-events/trip/${tripId}`, {
       headers: {
         Authorization: `Bearer ${idToken}`,
       },
@@ -175,7 +175,7 @@ export async function getSOSEventsByTripId(idToken: string, tripId: string): Pro
  */
 export async function getSOSEventsByStatus(idToken: string, status: SOSEventStatus): Promise<SOSEventDTO[]> {
   try {
-    const response = await api.get(`/sos-events/status/${status}`, {
+    const response = await api.get(`/api/v1/sos-events/status/${status}`, {
       headers: {
         Authorization: `Bearer ${idToken}`,
       },
@@ -199,7 +199,7 @@ export async function getSOSEventsByStatusPaged(
   size: number = 10,
 ): Promise<PagedResponse<SOSEventDTO>> {
   try {
-    const response = await api.get(`/sos-events/status/${status}/paged`, {
+    const response = await api.get(`/api/v1/sos-events/status/${status}/paged`, {
       params: { page, size },
       headers: {
         Authorization: `Bearer ${idToken}`,
@@ -224,7 +224,7 @@ export async function findNearbySOSEvents(
   maxDistanceMeters: number,
 ): Promise<SOSEventDTO[]> {
   try {
-    const response = await api.get('/sos-events/nearby', {
+    const response = await api.get('/api/v1/sos-events/nearby', {
       params: { longitude, latitude, maxDistanceMeters },
       headers: {
         Authorization: `Bearer ${idToken}`,
@@ -249,7 +249,7 @@ export async function findNearbyActiveSOSEvents(
   maxDistanceMeters: number,
 ): Promise<SOSEventDTO[]> {
   try {
-    const response = await api.get('/sos-events/nearby/active', {
+    const response = await api.get('/api/v1/sos-events/nearby/active', {
       params: { longitude, latitude, maxDistanceMeters },
       headers: {
         Authorization: `Bearer ${idToken}`,

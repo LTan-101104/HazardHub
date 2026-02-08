@@ -68,9 +68,7 @@ function MapLayout() {
     auth.currentUser.getIdToken().then((idToken) => {
       getSOSEventsByUserId(idToken, user.id)
         .then((events) => {
-          const activeEvents = events.filter(
-            (e) => e.status !== SOSEventStatus.RESOLVED
-          );
+          const activeEvents = events.filter((e) => e.status !== SOSEventStatus.RESOLVED);
           if (activeEvents.length > 0) {
             const pins = activeEvents.map((e) => ({
               lat: e.latitude,
