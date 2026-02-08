@@ -60,21 +60,6 @@ export interface SOSEventDTO {
   dispatchReference?: string;
 }
 
-// Hazard Severity enum
-export enum HazardSeverity {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-  CRITICAL = 'CRITICAL',
-}
-
-// Hazard Status enum
-export enum HazardStatus {
-  PENDING = 'PENDING',
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-}
-
 // Hazard DTO interface
 export interface HazardDTO {
   id?: string;
