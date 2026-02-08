@@ -1,6 +1,7 @@
 package hazardhub.com.hub.service.impl;
 
 import hazardhub.com.hub.config.GeminiConfig;
+import hazardhub.com.hub.constants.HazardHubConstants;
 import hazardhub.com.hub.model.dto.ImageAnalysisResponseDTO;
 import hazardhub.com.hub.service.GeminiService;
 import lombok.RequiredArgsConstructor;
@@ -27,11 +28,6 @@ public class GeminiServiceImpl implements GeminiService {
 
         private final RestClient geminiRestClient;
         private final GeminiConfig geminiConfig;
-
-        private static final String SYSTEM_PROMPT = "You are a hazard identification assistant. Analyze this image and provide a short "
-                        +
-                        "(1-2 sentence) description of the hazard shown. Focus on what the hazard is, its " +
-                        "potential danger, and any immediate risks visible in the image.";
 
         @Override
         public ImageAnalysisResponseDTO analyzeHazardImage(String imageUrl) {
@@ -102,7 +98,7 @@ public class GeminiServiceImpl implements GeminiService {
                                 "parts", List.of(imagePart, textPart));
 
                 Map<String, Object> systemInstruction = Map.of(
-                                "parts", List.of(Map.of("text", SYSTEM_PROMPT)));
+                                "parts", List.of(Map.of("text", HazardHubConstants.HazardGemini.IMAGE_ANALYSIS_SYSTEM_PROMPT)));
 
                 return Map.of(
                                 "contents", List.of(userContent),
