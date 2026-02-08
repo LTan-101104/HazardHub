@@ -64,6 +64,8 @@ public class AIController {
         return ResponseEntity.ok(response);
     }
 
+    // TODO: an alternative search formula is corridor search, which would be more
+    // efficient
     /**
      * Haversine formula to calculate distance in meters between two lat/lng points.
      */
