@@ -35,10 +35,14 @@ public class HazardVerificationServiceImpl implements HazardVerificationService 
         HazardVerification saved = hazardVerificationRepository.save(entity);
 
         // Auto-increment verification or dispute count on the hazard
+        // TODO: currently the frront end toggles, but backend did not delete toggled
+        // off count so will need to be resolved in future (this just randomly increment
+        // total report cout)
         Hazard hazard = hazardRepository.findById(dto.getHazardId())
                 .orElseThrow(() -> new ResourceNotFoundException("Hazard not found with id: " + dto.getHazardId()));
         if (dto.getVerificationType() == VerificationType.CONFIRM) {
-            hazard.setVerificationCount((hazard.getVerificationCount() == null ? 0 : hazard.getVerificationCount()) + 1);
+            hazard.setVerificationCount(
+                    (hazard.getVerificationCount() == null ? 0 : hazard.getVerificationCount()) + 1);
         } else if (dto.getVerificationType() == VerificationType.DISPUTE) {
             hazard.setDisputeCount((hazard.getDisputeCount() == null ? 0 : hazard.getDisputeCount()) + 1);
         }

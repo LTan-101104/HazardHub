@@ -64,9 +64,7 @@ function MapLayout() {
         const currentUser = auth?.currentUser;
         if (!currentUser) return;
         const idToken = await currentUser.getIdToken();
-        console.log('Fetching hazards at:', { lat, lng, maxDistance: HAZARD_SEARCH_RADIUS_METERS });
         const dtos = await getNearbyHazards(idToken, lng, lat, HAZARD_SEARCH_RADIUS_METERS);
-        console.log('Hazard DTOs received:', dtos.length, dtos);
         setHazards(dtos.map(dtoToMarker));
       } catch (err) {
         console.error('Failed to fetch hazards:', err);

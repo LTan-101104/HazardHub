@@ -5,12 +5,17 @@ import { RotateCcw, Check, X, Loader2 } from 'lucide-react';
 import { useMap } from '../map-provider';
 import { useAuth } from '@/context/AuthContext';
 import { auth } from '@/lib/firebase';
-import { createHazardVerification, getUserHazardVerification, deleteHazardVerification } from '@/lib/actions/hazard-action';
+import {
+  createHazardVerification,
+  getUserHazardVerification,
+  deleteHazardVerification,
+  getHazardById,
+} from '@/lib/actions/hazard-action';
 
 type VerificationType = 'CONFIRM' | 'DISPUTE';
 
 export function HazardActions() {
-  const { state } = useMap();
+  const { state, dispatch } = useMap();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [existingVerification, setExistingVerification] = useState<VerificationType | null>(null);
@@ -79,6 +84,20 @@ export function HazardActions() {
         const result = await getUserHazardVerification(idToken, state.selectedHazard.id, user.id);
         setExistingVerification(result?.verificationType ?? type);
         setExistingVerificationId(result?.id ?? null);
+      }
+
+      // Refresh hazard counts so the UI shows the updated reportCount
+      try {
+        const updatedHazard = await getHazardById(idToken, state.selectedHazard.id);
+        dispatch({
+          type: 'SELECT_HAZARD',
+          payload: {
+            ...state.selectedHazard,
+            reportCount: (updatedHazard.verificationCount ?? 0) + 1,
+          },
+        });
+      } catch {
+        // Non-critical — counts will refresh on next open
       }
     } catch (err) {
       console.error(`Failed to ${type.toLowerCase()} hazard:`, err);

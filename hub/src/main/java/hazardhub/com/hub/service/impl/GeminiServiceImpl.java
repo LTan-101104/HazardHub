@@ -59,12 +59,21 @@ public class GeminiServiceImpl implements GeminiService {
         }
 
         private static final long MAX_IMAGE_BYTES = 20 * 1024 * 1024; // 20 MB guard
+        private static final String ALLOWED_HOST = "firebasestorage.googleapis.com";
 
         private Map<String, Object> buildRequestBody(String imageUrl) {
+                // SSRF guard — only allow downloads from Firebase Storage
+                URI uri = URI.create(imageUrl);
+                if (!"https".equalsIgnoreCase(uri.getScheme())
+                                || !ALLOWED_HOST.equalsIgnoreCase(uri.getHost())) {
+                        throw new IllegalArgumentException(
+                                        "Image URL must be an HTTPS Firebase Storage URL");
+                }
+
                 // Download image and send as inline base64 — Firebase Storage URLs
                 // aren't directly accessible to Gemini via gs:// or https://.
                 byte[] imageBytes;
-                try (InputStream in = URI.create(imageUrl).toURL().openStream()) {
+                try (InputStream in = uri.toURL().openStream()) {
                         imageBytes = in.readAllBytes();
                 } catch (Exception e) {
                         log.error("Failed to download image from URL: {}", imageUrl, e);
