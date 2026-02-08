@@ -53,7 +53,7 @@ const dashboardItems = [
   {
     title: 'Safety Profile',
     icon: Shield,
-    href: '/profile',
+    href: '/safety-profile',
     requiresAuth: true,
   },
   {
