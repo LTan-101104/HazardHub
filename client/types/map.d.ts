@@ -30,6 +30,7 @@ export interface HazardMarker {
   severity: HazardSeverity;
   title: string;
   description: string;
+  imageUrl?: string;
   reportedAt: string;
   reportCount: number;
 }

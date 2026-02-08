@@ -70,3 +70,37 @@ export interface PagedResponse<T> {
   first: boolean;
   last: boolean;
 }
+
+
+//Hazard types
+export enum HazardSeverity {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+  CRITICAL = 'CRITICAL',
+}
+
+export enum HazardStatus {
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+}
+
+export interface HazardDTO {
+  id?: string;
+  reporterId: string;
+  expiresAt?: string;
+  longitude: number;
+  latitude: number;
+  locationAccuracyMeters: number;
+  address?: string;
+  severity: HazardSeverity;
+  description: string;
+  imageUrl?: string;
+  thumbnailUrl?: string;
+  status?: HazardStatus;
+  verificationCount?: number;
+  disputeCount?: number;
+  disabledAt?: string;
+  affectedRadiusMeters: number;
+}
