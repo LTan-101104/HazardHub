@@ -7,8 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -23,8 +23,7 @@ public class GoogleDirectionsServiceImpl implements GoogleDirectionsService {
     @Override
     @SuppressWarnings("unchecked")
     public Map<String, Object> getDirections(String origin, String destination, String waypoints, String mode) {
-        log.info("Calling Google Directions API: origin={}, destination={}, waypoints={}, mode={}",
-                origin, destination, waypoints, mode);
+        log.info("Calling Google Directions API: origin={}, destination={}, mode={}", origin, destination, mode);
 
         String uri = buildUri(origin, destination, waypoints, mode);
 
@@ -51,12 +50,9 @@ public class GoogleDirectionsServiceImpl implements GoogleDirectionsService {
         return response;
     }
 
-    /**
-     * Extract the encoded polyline from the first route in a Directions API
-     * response.
-     */
+    @Override
     @SuppressWarnings("unchecked")
-    public static String extractPolyline(Map<String, Object> directionsResponse) {
+    public String extractPolyline(Map<String, Object> directionsResponse) {
         List<Map<String, Object>> routes = (List<Map<String, Object>>) directionsResponse.get("routes");
         if (routes == null || routes.isEmpty()) {
             return null;
@@ -65,53 +61,58 @@ public class GoogleDirectionsServiceImpl implements GoogleDirectionsService {
         return overviewPolyline != null ? (String) overviewPolyline.get("points") : null;
     }
 
-    /**
-     * Extract total distance in meters from the first route's first leg.
-     */
+    @Override
     @SuppressWarnings("unchecked")
-    public static Double extractDistanceMeters(Map<String, Object> directionsResponse) {
-        Map<String, Object> leg = extractFirstLeg(directionsResponse);
-        if (leg == null)
-            return null;
-        Map<String, Object> distance = (Map<String, Object>) leg.get("distance");
-        return distance != null ? ((Number) distance.get("value")).doubleValue() : null;
+    public double extractDistanceMeters(Map<String, Object> directionsResponse) {
+        List<Map<String, Object>> legs = extractAllLegs(directionsResponse);
+        if (legs == null) return 0;
+
+        double total = 0;
+        for (Map<String, Object> leg : legs) {
+            Map<String, Object> distance = (Map<String, Object>) leg.get("distance");
+            if (distance != null) {
+                total += ((Number) distance.get("value")).doubleValue();
+            }
+        }
+        return total;
     }
 
-    /**
-     * Extract total duration in seconds from the first route's first leg.
-     */
+    @Override
     @SuppressWarnings("unchecked")
-    public static Integer extractDurationSeconds(Map<String, Object> directionsResponse) {
-        Map<String, Object> leg = extractFirstLeg(directionsResponse);
-        if (leg == null)
-            return null;
-        Map<String, Object> duration = (Map<String, Object>) leg.get("duration");
-        return duration != null ? ((Number) duration.get("value")).intValue() : null;
+    public int extractDurationSeconds(Map<String, Object> directionsResponse) {
+        List<Map<String, Object>> legs = extractAllLegs(directionsResponse);
+        if (legs == null) return 0;
+
+        int total = 0;
+        for (Map<String, Object> leg : legs) {
+            Map<String, Object> duration = (Map<String, Object>) leg.get("duration");
+            if (duration != null) {
+                total += ((Number) duration.get("value")).intValue();
+            }
+        }
+        return total;
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> extractFirstLeg(Map<String, Object> directionsResponse) {
+    private List<Map<String, Object>> extractAllLegs(Map<String, Object> directionsResponse) {
         List<Map<String, Object>> routes = (List<Map<String, Object>>) directionsResponse.get("routes");
-        if (routes == null || routes.isEmpty())
-            return null;
+        if (routes == null || routes.isEmpty()) return null;
         List<Map<String, Object>> legs = (List<Map<String, Object>>) routes.get(0).get("legs");
-        if (legs == null || legs.isEmpty())
-            return null;
-        return legs.get(0);
+        if (legs == null || legs.isEmpty()) return null;
+        return legs;
     }
 
     private String buildUri(String origin, String destination, String waypoints, String mode) {
-        StringBuilder sb = new StringBuilder("/maps/api/directions/json?");
-        sb.append("origin=").append(origin);
-        sb.append("&destination=").append(destination);
-        sb.append("&mode=").append(mode);
+        UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/maps/api/directions/json")
+                .queryParam("origin", origin)
+                .queryParam("destination", destination)
+                .queryParam("mode", mode)
+                .queryParam("key", googleMapsConfig.getApiKey());
 
         if (waypoints != null && !waypoints.isBlank()) {
-            sb.append("&waypoints=").append(waypoints);
+            builder.queryParam("waypoints", waypoints);
         }
 
-        sb.append("&key=").append(googleMapsConfig.getApiKey());
-
-        return sb.toString();
+        return builder.build().toUriString();
     }
 }
