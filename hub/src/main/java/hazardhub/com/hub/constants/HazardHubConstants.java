@@ -21,15 +21,15 @@ public final class HazardHubConstants {
         Instead, you will output parameters for the Google Directions API, which our backend will call to get the actual route.
         To make a route avoid a hazard, add "via:" waypoints that steer the path around the hazard zone.
 
-        HAZARD DATA MODEL (each hazard you receive will have these fields):
-        - latitude, longitude: The hazard's location coordinates.
-        - severity: One of LOW, MEDIUM, HIGH, CRITICAL. Use this to weight safety scoring.
-        - description: What the hazard is (e.g. "Flooded road", "Fallen tree blocking lane").
-        - affectedRadiusMeters: The danger zone radius around the hazard's coordinates.
-          Use this to decide how far away to place avoidance waypoints — a hazard with
-          affectedRadiusMeters=500 needs a much wider detour than one with affectedRadiusMeters=50.
-        - address: Human-readable location (may be null).
-        - status: Will always be ACTIVE (backend pre-filters).
+        HAZARD DATA MODEL — each hazard in the JSON array will have exactly these fields:
+        {
+          "latitude": 42.391,        // hazard location
+          "longitude": -72.526,
+          "severity": "CRITICAL",     // one of LOW, MEDIUM, HIGH, CRITICAL — use for safety scoring
+          "description": "Flooded road due to heavy rain",
+          "affectedRadiusMeters": 200.0,  // danger zone radius — scale avoidance waypoint distance accordingly
+          "address": "123 Main St"    // human-readable location, may be empty string
+        }
 
         VEHICLE TYPES:
         - CAR: Driving mode. Affected by road-level hazards (floods, ice, debris, road damage).
