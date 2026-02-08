@@ -1,6 +1,7 @@
 'use client';
 
-import { X, Clock, Users } from 'lucide-react';
+import Image from 'next/image';
+import { X, Clock, Users, ImageOff } from 'lucide-react';
 import { useMap } from '../map-provider';
 import { GeminiSuggestion } from './gemini-suggestion';
 import { HazardActions } from './hazard-actions';
@@ -19,15 +20,43 @@ const severityColors: Record<string, string> = {
   low: 'bg-green-500',
 };
 
+const severityLabels: Record<string, string> = {
+  critical: 'Critical Hazard',
+  high: 'High-Risk Hazard',
+  medium: 'Medium-Risk Hazard',
+  low: 'Low-Risk Hazard',
+};
+
 export function HazardDetailContent({ hazard }: { hazard: HazardMarker }) {
   const { dispatch } = useMap();
 
   return (
     <div className="flex flex-col">
+      {/* Hazard image or placeholder */}
+      {hazard.imageUrl ? (
+        <div className="relative h-48 w-full overflow-hidden">
+          <Image
+            src={hazard.imageUrl}
+            alt={hazard.title}
+            fill
+            className="object-cover"
+            sizes="(min-width: 1024px) 380px, 100vw"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent" />
+        </div>
+      ) : (
+        <div className="flex h-36 w-full items-center justify-center bg-[#252525]">
+          <div className="flex flex-col items-center gap-2 text-[#555]">
+            <ImageOff className="size-8" />
+            <span className="text-xs">No photo available</span>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between px-4 pt-4">
         <div className="flex flex-col gap-1">
-          <h3 className="font-mono text-lg font-semibold text-white">{hazard.title}</h3>
+          <h3 className="font-mono text-base font-semibold text-white">{severityLabels[hazard.severity] ?? 'Reported Hazard'}</h3>
           <div className="flex items-center gap-2">
             <span className={`inline-block size-2 rounded-full ${severityColors[hazard.severity]}`} />
             <span className="text-xs capitalize text-[#FF8400]">{hazard.severity} Severity</span>

@@ -4,8 +4,10 @@ import hazardhub.com.hub.exception.BadRequestException;
 import hazardhub.com.hub.exception.ResourceNotFoundException;
 import hazardhub.com.hub.mapper.HazardVerificationMapper;
 import hazardhub.com.hub.model.dto.HazardVerificationDTO;
+import hazardhub.com.hub.model.entity.Hazard;
 import hazardhub.com.hub.model.entity.HazardVerification;
 import hazardhub.com.hub.model.enums.VerificationType;
+import hazardhub.com.hub.repository.HazardRepository;
 import hazardhub.com.hub.repository.HazardVerificationRepository;
 import hazardhub.com.hub.service.HazardVerificationService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import java.util.Optional;
 public class HazardVerificationServiceImpl implements HazardVerificationService {
 
     private final HazardVerificationRepository hazardVerificationRepository;
+    private final HazardRepository hazardRepository;
 
     @Override
     public HazardVerificationDTO create(HazardVerificationDTO dto) {
@@ -30,6 +33,21 @@ public class HazardVerificationServiceImpl implements HazardVerificationService 
         }
         HazardVerification entity = HazardVerificationMapper.toEntity(dto);
         HazardVerification saved = hazardVerificationRepository.save(entity);
+
+        // Auto-increment verification or dispute count on the hazard
+        // TODO: currently the frront end toggles, but backend did not delete toggled
+        // off count so will need to be resolved in future (this just randomly increment
+        // total report cout)
+        Hazard hazard = hazardRepository.findById(dto.getHazardId())
+                .orElseThrow(() -> new ResourceNotFoundException("Hazard not found with id: " + dto.getHazardId()));
+        if (dto.getVerificationType() == VerificationType.CONFIRM) {
+            hazard.setVerificationCount(
+                    (hazard.getVerificationCount() == null ? 0 : hazard.getVerificationCount()) + 1);
+        } else if (dto.getVerificationType() == VerificationType.DISPUTE) {
+            hazard.setDisputeCount((hazard.getDisputeCount() == null ? 0 : hazard.getDisputeCount()) + 1);
+        }
+        hazardRepository.save(hazard);
+
         return HazardVerificationMapper.toDTO(saved);
     }
 

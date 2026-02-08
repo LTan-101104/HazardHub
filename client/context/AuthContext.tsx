@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Fetch user data from backend
         try {
-          const response = await api.get('/auth/me', {
+          const response = await api.get('/api/v1/auth/me', {
             headers: {
               Authorization: `Bearer ${idToken}`,
             },
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const idToken = await userCredential.user.getIdToken();
 
       // Fetch user data from backend and update state before returning
-      const response = await api.get('/auth/me', {
+      const response = await api.get('/api/v1/auth/me', {
         headers: {
           Authorization: `Bearer ${idToken}`,
         },
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const firebaseAuth = requireAuth();
       // Register with backend first
-      await api.post('/auth/register', data);
+      await api.post('/api/v1/auth/register', data);
 
       // Sign in to get the user credential, then send verification email
       const userCredential = await signInWithEmailAndPassword(firebaseAuth, data.email, data.password);
@@ -124,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Get token and fetch/create user in backend
       const idToken = await result.user.getIdToken();
-      const response = await api.get('/auth/me', {
+      const response = await api.get('/api/v1/auth/me', {
         headers: {
           Authorization: `Bearer ${idToken}`,
         },

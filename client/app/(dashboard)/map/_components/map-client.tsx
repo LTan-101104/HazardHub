@@ -15,6 +15,7 @@ import { ChatSheet } from './mobile/chat-sheet';
 import { HazardDetailSheet } from './mobile/hazard-detail-sheet';
 import { TurnInstructionCard } from './navigation/turn-instruction-card';
 import { NavigationBar } from './navigation/navigation-bar';
+import { DEFAULT_CENTER, HAZARD_SEARCH_RADIUS_METERS } from '@/lib/constants/map-config';
 import { useIsDesktop } from '@/lib/hooks/use-media-query';
 import { useDirections } from './hooks/use-directions';
 import { useSOS } from './hooks/use-sos';
@@ -22,16 +23,40 @@ import { useAuth } from '@/context/AuthContext';
 import { auth } from '@/lib/firebase';
 import { getSOSEventsByUserId, deleteSOSEvent } from '@/lib/actions/sos-action';
 import { SOSEventStatus } from '@/types';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
+import { getNearbyHazards } from '@/lib/actions/hazard-action';
+
+import type { HazardMarker, HazardSeverity } from '@/types/map';
+import type { HazardDTO } from '@/types';
+
+function dtoToMarker(dto: HazardDTO): HazardMarker {
+  // Use the first sentence (up to 60 chars) as a short title
+  const raw = dto.description ?? '';
+  const firstSentence = raw.split(/[.!?]\s/)[0];
+  const title = firstSentence.length > 60 ? firstSentence.slice(0, 57) + '...' : firstSentence;
+
+  return {
+    id: dto.id!,
+    position: { lat: dto.latitude, lng: dto.longitude },
+    type: 'other',
+    severity: dto.severity.toLowerCase() as HazardSeverity,
+    title,
+    description: dto.description,
+    imageUrl: dto.imageUrl ?? undefined,
+    reportedAt: new Date().toISOString(),
+    reportCount: (dto.verificationCount ?? 0) + 1,
+  };
+}
 
 function MapLayout() {
   const { state, dispatch } = useMap();
+  const { user } = useAuth();
   const isDesktop = useIsDesktop();
   const { calculateRoute, isReady } = useDirections();
   const isCalculatingRef = useRef(false);
   const { sosEvent, triggerSOS } = useSOS();
-  const { user } = useAuth();
+
   const prevSOSCountRef = useRef(0);
   const hasLoadedSOSRef = useRef(false);
 
@@ -82,6 +107,44 @@ function MapLayout() {
     }
     prevSOSCountRef.current = currentCount;
   }, [state.sosLocations, user, triggerSOS, dispatch]);
+  const [hazards, setHazards] = useState<HazardMarker[]>([]);
+
+  // Fetch nearby hazards once user is authenticated
+  useEffect(() => {
+    if (!user) return;
+
+    async function fetchHazards(lat: number, lng: number) {
+      try {
+        const currentUser = auth?.currentUser;
+        if (!currentUser) return;
+        const idToken = await currentUser.getIdToken();
+        const dtos = await getNearbyHazards(idToken, lng, lat, HAZARD_SEARCH_RADIUS_METERS);
+        setHazards(dtos.map(dtoToMarker));
+      } catch (err) {
+        console.error('Failed to fetch hazards:', err);
+      }
+    }
+
+    if (navigator.geolocation) {
+      console.log('Using browser geolocation...');
+      navigator.geolocation.getCurrentPosition(
+        (pos) => fetchHazards(pos.coords.latitude, pos.coords.longitude),
+        () => {
+          // Fallback: fetch around default center
+          fetchHazards(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
+        },
+      );
+    } else {
+      fetchHazards(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
+    }
+  }, [user]);
+
+  const handleHazardSelect = useCallback(
+    (hazard: HazardMarker) => {
+      dispatch({ type: 'SELECT_HAZARD', payload: hazard });
+    },
+    [dispatch],
+  );
 
   useEffect(() => {
     const fetchRoute = async () => {
@@ -126,8 +189,8 @@ function MapLayout() {
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-[#1A1A1A]">
       {/* Full-screen map */}
-      <div className={`absolute inset-0 ${isDesktop ? 'lg:right-95' : ''}`}>
-        <GoogleMapView />
+      <div className={`absolute inset-0 ${isDesktop ? 'lg:right-[380px]' : ''}`}>
+        <GoogleMapView hazards={hazards} onHazardSelect={handleHazardSelect} />
       </div>
 
       {/* Dim overlay when hazard detail is open on mobile */}
