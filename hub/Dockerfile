@@ -30,4 +30,5 @@ COPY --from=build /app/build/libs/*.jar app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "exec java ${SPRING_DATA_MONGODB_URI:+\"-Dspring.data.mongodb.uri=$SPRING_DATA_MONGODB_URI\"} ${CORS_ALLOWED_ORIGINS:+\"-Dapp.cors.allowed-origins=$CORS_ALLOWED_ORIGINS\"} -jar app.jar"]
+# ENTRYPOINT ["java", "-jar", "app.jar"]

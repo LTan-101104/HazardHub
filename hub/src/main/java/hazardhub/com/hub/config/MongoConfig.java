@@ -28,6 +28,15 @@ public class MongoConfig {
 
     private final MongoTemplate mongoTemplate;
 
+    @org.springframework.beans.factory.annotation.Value("${spring.data.mongodb.uri:NOT_SET}")
+    private String mongoUri;
+
+    @jakarta.annotation.PostConstruct
+    public void logMongoConfig() {
+        log.info("=== MONGO DEBUG === spring.data.mongodb.uri = {}", mongoUri);
+        log.info("=== MONGO DEBUG === ENV SPRING_DATA_MONGODB_URI = {}", System.getenv("SPRING_DATA_MONGODB_URI"));
+    }
+
     @Bean
     public AuditorAware<String> auditorAware() {
         // TODO: Replace with actual user from Firebase Auth context
