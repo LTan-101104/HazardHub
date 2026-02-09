@@ -5,6 +5,8 @@ import { RouteSuggestionCard } from './route-suggestion-card';
 import type { ChatMessage } from '@/types/map';
 
 export function ChatBubble({ message }: { message: ChatMessage }) {
+  const routeCards = message.routeCards ?? (message.routeCard ? [message.routeCard] : []);
+
   if (message.role === 'user') {
     return (
       <div className="flex justify-end">
@@ -22,7 +24,9 @@ export function ChatBubble({ message }: { message: ChatMessage }) {
       </div>
       <div className="flex max-w-[85%] flex-col gap-3">
         <p className="text-sm leading-relaxed text-[#B8B9B6]">{message.content}</p>
-        {message.routeCard && <RouteSuggestionCard card={message.routeCard} />}
+        {routeCards.map((card, index) => (
+          <RouteSuggestionCard key={`${message.id}-route-${index}`} card={card} />
+        ))}
       </div>
     </div>
   );

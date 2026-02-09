@@ -2,24 +2,20 @@
 
 import { Send } from 'lucide-react';
 import { useState } from 'react';
-import { useMap } from '../map-provider';
 
-export function ChatInput() {
+interface ChatInputProps {
+  onSend: (message: string) => Promise<void>;
+  isSending: boolean;
+}
+
+export function ChatInput({ onSend, isSending }: ChatInputProps) {
   const [value, setValue] = useState('');
-  const { dispatch } = useMap();
 
-  const handleSend = () => {
-    if (!value.trim()) return;
-    dispatch({
-      type: 'ADD_CHAT_MESSAGE',
-      payload: {
-        id: crypto.randomUUID(),
-        role: 'user',
-        content: value.trim(),
-        timestamp: new Date().toISOString(),
-      },
-    });
+  const handleSend = async () => {
+    const message = value.trim();
+    if (!message || isSending) return;
     setValue('');
+    await onSend(message);
   };
 
   return (
@@ -29,13 +25,19 @@ export function ChatInput() {
           type="text"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          onKeyDown={(e) => {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            void handleSend();
+          }}
           placeholder="Ask about routes, hazards..."
+          disabled={isSending}
           className="flex-1 bg-transparent text-sm text-white placeholder:text-[#B8B9B6] focus:outline-none"
         />
         <button
-          onClick={handleSend}
-          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#FF8400] transition-colors hover:bg-[#e67700]"
+          onClick={() => void handleSend()}
+          disabled={isSending || !value.trim()}
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#FF8400] transition-colors hover:bg-[#e67700] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Send className="size-4 text-black" />
         </button>

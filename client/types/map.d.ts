@@ -69,6 +69,7 @@ export interface ChatMessage {
   content: string;
   timestamp: string;
   routeCard?: RouteCardData;
+  routeCards?: RouteCardData[];
 }
 
 export interface RouteCardData {
