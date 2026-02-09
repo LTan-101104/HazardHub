@@ -18,9 +18,12 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import hazardhub.com.hub.model.enums.VehicleType;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +33,7 @@ public class RouteSuggestionServiceImpl implements RouteSuggestionService {
     private final RestClient geminiRestClient;
     private final GeminiConfig geminiConfig;
     private final GoogleDirectionsService googleDirectionsService;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public RouteSuggestionResponseDTO suggestRoutes(RouteSuggestionRequestDTO request, List<HazardDTO> hazards) {
@@ -52,7 +55,7 @@ public class RouteSuggestionServiceImpl implements RouteSuggestionService {
         // 4. For each route, call Directions API to get real polyline/distance/duration
         List<SuggestedRouteDTO> enrichedRoutes = new ArrayList<>();
         for (SuggestedRouteDTO route : suggestion.getRoutes()) {
-            SuggestedRouteDTO enriched = enrichRouteWithDirections(route);
+            SuggestedRouteDTO enriched = enrichRouteWithDirections(route, request.getVehicleType());
             if (enriched.getPolyline() != null) {
                 enrichedRoutes.add(enriched);
             } else {
@@ -191,19 +194,22 @@ public class RouteSuggestionServiceImpl implements RouteSuggestionService {
         }
     }
 
-    private SuggestedRouteDTO enrichRouteWithDirections(SuggestedRouteDTO route) {
+    private SuggestedRouteDTO enrichRouteWithDirections(SuggestedRouteDTO route, VehicleType vehicleType) {
         DirectionsParamsDTO params = route.getDirectionsParams();
         if (params == null) {
             log.warn("Route '{}' has no directionsParams, skipping Directions API call", route.getName());
             return route;
         }
 
+        String normalizedMode = normalizeMode(params.getMode(), vehicleType);
+        params.setMode(normalizedMode);
+
         try {
             Map<String, Object> directionsResponse = googleDirectionsService.getDirections(
                     params.getOrigin(),
                     params.getDestination(),
                     params.getWaypoints() != null ? params.getWaypoints() : "",
-                    params.getMode());
+                    normalizedMode);
 
             route.setPolyline(googleDirectionsService.extractPolyline(directionsResponse));
             route.setDistanceMeters(googleDirectionsService.extractDistanceMeters(directionsResponse));
@@ -222,6 +228,33 @@ public class RouteSuggestionServiceImpl implements RouteSuggestionService {
         }
 
         return route;
+    }
+
+    private static final Set<String> VALID_MODES = Set.of("driving", "bicycling", "walking");
+
+    private String normalizeMode(String rawMode, VehicleType vehicleType) {
+        if (rawMode != null) {
+            String lower = rawMode.strip().toLowerCase();
+            if (VALID_MODES.contains(lower)) {
+                return lower;
+            }
+            // Handle common LLM variants
+            if (lower.startsWith("driv") || lower.equals("car")) {
+                return "driving";
+            }
+            if (lower.startsWith("bic") || lower.startsWith("cycl") || lower.equals("bike")) {
+                return "bicycling";
+            }
+            if (lower.startsWith("walk") || lower.equals("foot") || lower.equals("pedestrian")) {
+                return "walking";
+            }
+            log.warn("Unrecognized mode '{}' from Gemini, falling back to vehicleType={}", rawMode, vehicleType);
+        }
+        return switch (vehicleType) {
+            case CAR -> "driving";
+            case BICYCLE -> "bicycling";
+            case WALKING -> "walking";
+        };
     }
 
     private Double toDouble(Object value) {
