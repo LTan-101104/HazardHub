@@ -24,6 +24,7 @@ import { SOSEventDTO, SOSEventStatus, EmergencyContactDTO } from '@/types';
 import type { LatLng } from '@/types/map';
 import { auth } from '@/lib/firebase';
 import { getEmergencyContactsByPriority } from '@/lib/actions/emergency-actions';
+import { sendChatMessage } from '@/lib/actions/chat-action';
 
 interface SOSPopupProps {
   isOpen: boolean;
@@ -87,12 +88,49 @@ export function SOSPopup({
   estimatedArrival = 8,
 }: SOSPopupProps) {
   const [safetyChecklist, setSafetyChecklist] = useState<SafetyCheckItem[]>(defaultSafetyChecklist);
+  const [aiEta, setAiEta] = useState<number | null>(null);
+  const [loadingChecklist, setLoadingChecklist] = useState(false);
   const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContactDTO[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(false);
 
-  // Fetch emergency contacts from safety profile when popup opens
+  // Fetch AI safety checklist and emergency contacts when popup opens
   useEffect(() => {
     if (!isOpen) return;
+
+    const fetchChecklist = async () => {
+      setLoadingChecklist(true);
+      try {
+        const idToken = await auth?.currentUser?.getIdToken();
+        if (!idToken) return;
+
+        const lat = selectedLocation?.lat ?? sosEvent?.latitude ?? 40.7128;
+        const lng = selectedLocation?.lng ?? sosEvent?.longitude ?? -74.006;
+
+        const response = await sendChatMessage(idToken, {
+          message:
+            `I triggered an SOS emergency at coordinates (${lat}, ${lng}). ` +
+            'Respond with exactly two sections:\n' +
+            '1) On the very first line, write ONLY "ETA: X" where X is your best estimate in minutes for emergency help to arrive at this location (just the number, no extra text).\n' +
+            '2) Then on the following lines, give me a concise safety checklist of 5 actionable items I should do right now. Each item on its own line, prefixed with a dash (-).\n' +
+            'No other text outside these two sections.',
+          originLatitude: lat,
+          originLongitude: lng,
+        });
+
+        const { eta, items } = parseAiResponse(response.reply);
+        if (items.length > 0) {
+          setSafetyChecklist(items);
+        }
+        if (eta !== null) {
+          setAiEta(eta);
+        }
+      } catch (err) {
+        console.error('Failed to load AI safety checklist, using defaults:', err);
+        setSafetyChecklist(defaultSafetyChecklist);
+      } finally {
+        setLoadingChecklist(false);
+      }
+    };
 
     const fetchContacts = async () => {
       setLoadingContacts(true);
@@ -108,8 +146,9 @@ export function SOSPopup({
       }
     };
 
+    fetchChecklist();
     fetchContacts();
-  }, [isOpen]);
+  }, [isOpen, selectedLocation, sosEvent]);
 
   // Format coordinates for display
   const formatCoordinate = (value: number, isLatitude: boolean): string => {
@@ -141,6 +180,40 @@ export function SOSPopup({
   const handleCall = (number: string) => {
     window.open(`tel:${number}`, '_self');
   };
+
+  function parseAiResponse(reply: string): { eta: number | null; items: SafetyCheckItem[] } {
+    const lines = reply.split('\n');
+    let eta: number | null = null;
+    const checklistLines: string[] = [];
+
+    for (const line of lines) {
+      const etaMatch = line.match(/^[\s]*ETA[\s]*:[\s]*(\d+)/i);
+      if (etaMatch && eta === null) {
+        eta = parseInt(etaMatch[1], 10);
+        continue;
+      }
+      const cleaned = line.replace(/^[\s]*[-*•\d.)\]]+[\s]*/, '').trim();
+      if (cleaned.length > 0) {
+        checklistLines.push(cleaned);
+      }
+    }
+
+    const items = checklistLines.map((label, index) => ({
+      id: String(index + 1),
+      label,
+      checked: false,
+    }));
+
+    return { eta, items };
+  }
+
+  // Reset checklist and ETA when popup closes so it fetches fresh data on next open
+  useEffect(() => {
+    if (!isOpen) {
+      setSafetyChecklist(defaultSafetyChecklist);
+      setAiEta(null);
+    }
+  }, [isOpen]);
 
   // Derive broadcasting state from SOS status
   const isBroadcasting = !!sosEvent && sosEvent.status !== SOSEventStatus.RESOLVED;
@@ -186,7 +259,11 @@ export function SOSPopup({
               <div className="mt-4 flex items-center gap-2 rounded-lg bg-[#2A2A2A] px-4 py-2">
                 <Clock className="size-4 text-gray-400" />
                 <span className="text-sm text-gray-400">Help Arriving</span>
-                <span className="text-2xl font-bold text-white">~{estimatedArrival} min</span>
+                {loadingChecklist ? (
+                  <span className="text-sm animate-pulse text-gray-400">Estimating...</span>
+                ) : (
+                  <span className="text-2xl font-bold text-white">~{aiEta ?? estimatedArrival} min</span>
+                )}
               </div>
             )}
           </div>
@@ -346,28 +423,35 @@ export function SOSPopup({
             </div>
 
             <div className="space-y-3">
-              {safetyChecklist.map((item) => (
-                <div
-                  key={item.id}
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg p-3 transition-colors',
-                    item.checked ? 'bg-[#1A1A1A]' : 'bg-[#232323] hover:bg-[#282828]',
-                  )}
-                  onClick={() => toggleCheckItem(item.id)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === 'Enter' && toggleCheckItem(item.id)}
-                >
-                  <Checkbox
-                    checked={item.checked}
-                    className={cn(
-                      'size-5 rounded border-2 pointer-events-none',
-                      item.checked ? 'border-green-500 bg-green-500 data-[state=checked]:bg-green-500' : 'border-gray-500',
-                    )}
-                  />
-                  <span className={cn('text-sm', item.checked ? 'text-gray-400' : 'text-white')}>{item.label}</span>
+              {loadingChecklist ? (
+                <div className="flex items-center justify-center rounded-lg bg-[#232323] p-4">
+                  <Sparkles className="mr-2 size-4 animate-pulse text-blue-400" />
+                  <span className="text-sm text-gray-400">Generating safety checklist...</span>
                 </div>
-              ))}
+              ) : (
+                safetyChecklist.map((item) => (
+                  <div
+                    key={item.id}
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg p-3 transition-colors',
+                      item.checked ? 'bg-[#1A1A1A]' : 'bg-[#232323] hover:bg-[#282828]',
+                    )}
+                    onClick={() => toggleCheckItem(item.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && toggleCheckItem(item.id)}
+                  >
+                    <Checkbox
+                      checked={item.checked}
+                      className={cn(
+                        'size-5 rounded border-2 pointer-events-none',
+                        item.checked ? 'border-green-500 bg-green-500 data-[state=checked]:bg-green-500' : 'border-gray-500',
+                      )}
+                    />
+                    <span className={cn('text-sm', item.checked ? 'text-gray-400' : 'text-white')}>{item.label}</span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
