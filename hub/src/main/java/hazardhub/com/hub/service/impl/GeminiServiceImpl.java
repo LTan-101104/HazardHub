@@ -2,8 +2,6 @@ package hazardhub.com.hub.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.genai.Client;
-import com.google.genai.types.GenerateContentResponse;
 import hazardhub.com.hub.config.GeminiConfig;
 import hazardhub.com.hub.constants.HazardHubConstants;
 import hazardhub.com.hub.model.dto.ChatRequestDTO;
@@ -57,7 +55,7 @@ public class GeminiServiceImpl implements GeminiService {
                                 .retrieve()
                                 .body(Map.class);
 
-                String description = extractTextFromResponse(response);
+                String description = extractTextFromResponse(response, "Unable to analyze the image.");
 
                 log.info("Gemini analysis complete for image: {}", imageUrl);
                 return ImageAnalysisResponseDTO.builder()
@@ -73,12 +71,7 @@ public class GeminiServiceImpl implements GeminiService {
 
                 String reply = null;
                 try {
-                        Client client = new Client();
-                        GenerateContentResponse response = client.models.generateContent(
-                                        geminiConfig.getModel(),
-                                        prompt,
-                                        null);
-                        reply = response != null ? response.text() : null;
+                        reply = generateChatReply(prompt);
                 } catch (Exception e) {
                         log.error("Gemini chat generation failed", e);
                 }
@@ -91,6 +84,26 @@ public class GeminiServiceImpl implements GeminiService {
                                 .reply(reply.trim())
                                 .routeOptions(routeOptions)
                                 .build();
+        }
+
+        @SuppressWarnings("unchecked")
+        private String generateChatReply(String prompt) {
+                Map<String, Object> requestBody = Map.of(
+                                "contents", List.of(
+                                                Map.of("role", "user",
+                                                                "parts", List.of(Map.of("text", prompt)))));
+
+                String uri = String.format("/models/%s:generateContent?key=%s",
+                                geminiConfig.getModel(), geminiConfig.getApiKey());
+
+                Map<String, Object> response = geminiRestClient.post()
+                                .uri(uri)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .body(requestBody)
+                                .retrieve()
+                                .body(Map.class);
+
+                return extractTextFromResponse(response, null);
         }
 
         private static final long MAX_IMAGE_BYTES = 20 * 1024 * 1024; // 20 MB guard
@@ -291,32 +304,32 @@ public class GeminiServiceImpl implements GeminiService {
         }
 
         @SuppressWarnings("unchecked")
-        private String extractTextFromResponse(Map<String, Object> response) {
+        private String extractTextFromResponse(Map<String, Object> response, String defaultText) {
                 if (response == null) {
-                        return "Unable to analyze the image.";
+                        return defaultText;
                 }
 
                 try {
                         List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get("candidates");
                         if (candidates == null || candidates.isEmpty()) {
-                                return "Unable to analyze the image.";
+                                return defaultText;
                         }
 
                         Map<String, Object> content = (Map<String, Object>) candidates.get(0).get("content");
                         if (content == null) {
-                                return "Unable to analyze the image.";
+                                return defaultText;
                         }
 
                         List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
                         if (parts == null || parts.isEmpty()) {
-                                return "Unable to analyze the image.";
+                                return defaultText;
                         }
 
                         String text = (String) parts.get(0).get("text");
-                        return text != null ? text.trim() : "Unable to analyze the image.";
+                        return text != null ? text.trim() : defaultText;
                 } catch (ClassCastException e) {
                         log.error("Failed to parse Gemini response", e);
-                        return "Unable to analyze the image.";
+                        return defaultText;
                 }
         }
 
