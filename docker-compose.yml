@@ -1,4 +1,23 @@
 services:
+  hub:
+    build:
+      context: ./hub
+      dockerfile: Dockerfile
+    container_name: hazardhub-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_MONGODB_URI: mongodb://mongodb:27017/hazardhub
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://localhost:3000,https://localhost:5173}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - hazardhub-network
+    restart: unless-stopped
+
   mongodb:
     image: mongo:latest
     container_name: hazardhub-mongodb
@@ -10,6 +29,12 @@ services:
       - mongodb_data:/data/db
     networks:
       - hazardhub-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     restart: unless-stopped
 
   # Optional: MongoDB web UI for managing the database
