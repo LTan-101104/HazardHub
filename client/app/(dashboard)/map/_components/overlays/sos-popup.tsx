@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
@@ -17,10 +17,13 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SOSEventDTO, SOSEventStatus } from '@/types';
+import { SOSEventDTO, SOSEventStatus, EmergencyContactDTO } from '@/types';
 import type { LatLng } from '@/types/map';
+import { auth } from '@/lib/firebase';
+import { getEmergencyContactsByPriority } from '@/lib/actions/emergency-actions';
 
 interface SOSPopupProps {
   isOpen: boolean;
@@ -69,7 +72,6 @@ const emergencyServices = [
   },
 ];
 
-// TODO: add the emergency contacts from safety profile and option to call them directly from here
 export function SOSPopup({
   isOpen,
   onClose,
@@ -85,6 +87,29 @@ export function SOSPopup({
   estimatedArrival = 8,
 }: SOSPopupProps) {
   const [safetyChecklist, setSafetyChecklist] = useState<SafetyCheckItem[]>(defaultSafetyChecklist);
+  const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContactDTO[]>([]);
+  const [loadingContacts, setLoadingContacts] = useState(false);
+
+  // Fetch emergency contacts from safety profile when popup opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const fetchContacts = async () => {
+      setLoadingContacts(true);
+      try {
+        const idToken = await auth?.currentUser?.getIdToken();
+        if (!idToken) return;
+        const contacts = await getEmergencyContactsByPriority(idToken);
+        setEmergencyContacts(contacts);
+      } catch (err) {
+        console.error('Failed to load emergency contacts:', err);
+      } finally {
+        setLoadingContacts(false);
+      }
+    };
+
+    fetchContacts();
+  }, [isOpen]);
 
   // Format coordinates for display
   const formatCoordinate = (value: number, isLatitude: boolean): string => {
@@ -347,7 +372,7 @@ export function SOSPopup({
           </div>
 
           {/* Emergency Services */}
-          <div className="mx-4 mt-4 mb-8">
+          <div className="mx-4 mt-4">
             <span className="mb-4 block text-xs font-semibold tracking-wider text-gray-400">EMERGENCY SERVICES</span>
 
             <div className="space-y-3">
@@ -379,6 +404,54 @@ export function SOSPopup({
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Emergency Contacts from Safety Profile */}
+          <div className="mx-4 mt-4 mb-8">
+            <span className="mb-4 block text-xs font-semibold tracking-wider text-gray-400">YOUR EMERGENCY CONTACTS</span>
+
+            {loadingContacts ? (
+              <div className="flex items-center justify-center rounded-2xl bg-[#2A2A2A] p-6">
+                <span className="text-sm text-gray-400">Loading contacts...</span>
+              </div>
+            ) : emergencyContacts.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 rounded-2xl bg-[#2A2A2A] p-6">
+                <User className="size-8 text-gray-500" />
+                <span className="text-sm text-gray-400">No emergency contacts added</span>
+                <span className="text-xs text-gray-500">Add contacts in your Safety Profile</span>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {emergencyContacts.map((contact) => (
+                  <div key={contact.id} className="flex items-center justify-between rounded-2xl bg-[#2A2A2A] p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-12 items-center justify-center rounded-xl bg-blue-900/50">
+                        <span className="text-sm font-bold text-blue-400">
+                          {contact.name
+                            .split(' ')
+                            .map((n) => n[0])
+                            .join('')
+                            .toUpperCase()
+                            .slice(0, 2)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="block font-medium text-white">{contact.name}</span>
+                        <span className="text-sm text-gray-400">
+                          {contact.relationship || 'Emergency Contact'} {contact.priority && contact.priority >= 100 ? ' · Primary' : ''}
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => handleCall(contact.phone)}
+                      className="size-12 rounded-full bg-blue-500 p-0 hover:bg-blue-600"
+                    >
+                      <Phone className="size-5 text-white" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </SheetContent>

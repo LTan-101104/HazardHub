@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, MapPin, Navigation } from 'lucide-react';
+import { GOOGLE_MAPS_API_KEY } from '@/lib/constants/map-config';
 
 interface EditLocationModalProps {
   open: boolean;
@@ -90,16 +91,17 @@ export default function EditLocationModal({ open, onOpenChange, location, onLoca
       },
     );
   };
-  // TODO: connect with geocoding API to get address from coordinates
   const reverseGeocode = async (lat: number, lng: number) => {
     try {
-      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}`,
+      );
       const data = await response.json();
 
-      if (data.display_name) {
+      if (data.status === 'OK' && data.results?.[0]?.formatted_address) {
         setFormData((prev) => ({
           ...prev,
-          address: data.display_name,
+          address: data.results[0].formatted_address,
         }));
       }
     } catch (error) {
