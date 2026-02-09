@@ -35,12 +35,12 @@ const navigationItems = [
     href: '/map',
     requiresAuth: false,
   },
-  {
-    title: 'AI Assistant',
-    icon: MessageSquare,
-    href: '/assistant',
-    requiresAuth: true,
-  },
+  // {
+  //   title: 'AI Assistant',
+  //   icon: MessageSquare,
+  //   href: '/assistant',
+  //   requiresAuth: true,
+  // },
   {
     title: 'Report Hazard',
     icon: AlertTriangle,
@@ -72,20 +72,20 @@ const dashboardItems = [
 ];
 
 // Settings items
-const settingsItems = [
-  {
-    title: 'Settings',
-    icon: Settings,
-    href: '/settings',
-    requiresAuth: true,
-  },
-  {
-    title: 'Help & Support',
-    icon: HelpCircle,
-    href: '/help',
-    requiresAuth: false,
-  },
-];
+// const settingsItems = [
+//   {
+//     title: 'Settings',
+//     icon: Settings,
+//     href: '/settings',
+//     requiresAuth: true,
+//   },
+//   {
+//     title: 'Help & Support',
+//     icon: HelpCircle,
+//     href: '/help',
+//     requiresAuth: false,
+//   },
+// ];
 
 // Logo component
 function SafeRouteLogo() {
@@ -178,6 +178,7 @@ function NavbarContent({ onNavClick }: { onNavClick?: () => void }) {
         <Separator className="my-2" />
 
         {/* Settings Section */}
+        {/*}
         <div className="py-2">
           <h3 className="mb-2 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Settings</h3>
           <div className="space-y-1">
@@ -196,7 +197,7 @@ function NavbarContent({ onNavClick }: { onNavClick?: () => void }) {
               </button>
             ))}
           </div>
-        </div>
+        </div> */}
       </ScrollArea>
 
       {/* Footer with user info */}
