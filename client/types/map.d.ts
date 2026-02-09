@@ -145,4 +145,5 @@ export type MapAction =
   | { type: 'REMOVE_SOS_PIN'; payload: number }
   | { type: 'CLEAR_ALL_SOS_PINS' }
   | { type: 'CLOSE_SOS_POPUP' }
-  | { type: 'TOGGLE_SOS_PIN_MODE'; payload: boolean };
+  | { type: 'TOGGLE_SOS_PIN_MODE'; payload: boolean }
+  | { type: 'SET_WEATHER'; payload: WeatherInfo };

@@ -2,14 +2,13 @@
 
 import { createContext, useContext, useReducer, type Dispatch, type ReactNode } from 'react';
 import type { MapContextState, MapAction } from '@/types/map';
-import { MOCK_WEATHER } from '@/lib/constants/map-config';
 
 const initialState: MapContextState = {
   viewState: 'browse',
   selectedHazard: null,
   activeRoute: null,
   alternateRoute: null,
-  weather: MOCK_WEATHER,
+  weather: { tempF: 0, condition: 'Loading', icon: 'Cloudy' },
   chatMessages: [],
   currentInstruction: null,
   fromLocation: '',
@@ -158,6 +157,8 @@ function mapReducer(state: MapContextState, action: MapAction): MapContextState 
       return { ...state, isSOSPopupOpen: false };
     case 'TOGGLE_SOS_PIN_MODE':
       return { ...state, isSOSPinMode: action.payload };
+    case 'SET_WEATHER':
+      return { ...state, weather: action.payload };
     default:
       return state;
   }

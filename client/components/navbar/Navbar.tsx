@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -90,10 +91,8 @@ const settingsItems = [
 function SafeRouteLogo() {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#ff8400]">
-        <Shield className="h-6 w-6 text-white" />
-      </div>
-      <span className="text-xl font-semibold">SafeRoute</span>
+      <Image src="/logo.png" alt="HazardHub logo" width={40} height={40} className="rounded-lg" />
+      <span className="text-xl font-semibold">HazardHub</span>
     </div>
   );
 }
@@ -285,7 +284,7 @@ function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
         <Menu className="h-5 w-5" />
         <span className="sr-only">Open menu</span>
       </Button>
-      <span className="font-semibold">SafeRoute</span>
+      <span className="font-semibold">HazardHub</span>
     </header>
   );
 }
