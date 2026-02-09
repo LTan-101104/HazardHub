@@ -247,7 +247,7 @@ export function ChatPanel() {
   );
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <ChatHeader />
       <ChatMessages isSending={isSending} onApplyRoute={handleApplyRoute} />
       <QuickActions onSelect={(value) => void handleSendMessage(value)} disabled={isSending} />

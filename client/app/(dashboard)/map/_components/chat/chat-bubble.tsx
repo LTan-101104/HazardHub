@@ -16,7 +16,7 @@ export function ChatBubble({ message, onApplyRoute }: ChatBubbleProps) {
     return (
       <div className="flex justify-end">
         <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-[rgba(255,132,0,0.15)] px-4 py-3">
-          <p className="text-sm leading-relaxed text-white">{message.content}</p>
+          <p className="break-words text-sm leading-relaxed text-white">{message.content}</p>
         </div>
       </div>
     );
@@ -28,7 +28,7 @@ export function ChatBubble({ message, onApplyRoute }: ChatBubbleProps) {
         <Sparkles className="size-3.5 text-white" />
       </div>
       <div className="flex max-w-[85%] flex-col gap-3">
-        <p className="text-sm leading-relaxed text-[#B8B9B6]">{message.content}</p>
+        <p className="break-words text-sm leading-relaxed text-[#B8B9B6]">{message.content}</p>
         {routeCards.map((card, index) => (
           <RouteSuggestionCard key={`${message.id}-route-${index}`} card={card} onApply={() => onApplyRoute(card)} />
         ))}

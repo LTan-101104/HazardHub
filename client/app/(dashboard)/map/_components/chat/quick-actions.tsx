@@ -9,7 +9,7 @@ interface QuickActionsProps {
 
 export function QuickActions({ onSelect, disabled }: QuickActionsProps) {
   return (
-    <div className="flex flex-wrap gap-2 px-4 py-2">
+    <div className="shrink-0 flex flex-wrap gap-2 px-4 py-2">
       {QUICK_ACTIONS.map((action) => (
         <button
           key={action}

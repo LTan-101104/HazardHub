@@ -7,7 +7,7 @@ export function ChatHeader() {
   const { dispatch } = useMap();
 
   return (
-    <div className="flex items-center justify-between px-4 py-3">
+    <div className="shrink-0 flex items-center justify-between px-4 py-3">
       <div className="flex items-center gap-3">
         <div className="flex size-8 items-center justify-center rounded-full bg-[#4285F4]">
           <Sparkles className="size-4 text-white" />

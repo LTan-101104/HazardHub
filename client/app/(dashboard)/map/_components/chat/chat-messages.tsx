@@ -21,7 +21,7 @@ export function ChatMessages({ isSending, onApplyRoute }: ChatMessagesProps) {
   }, [isSending, state.chatMessages.length]);
 
   return (
-    <ScrollArea className="flex-1 px-4">
+    <ScrollArea className="h-0 min-h-0 flex-1 overflow-hidden px-4">
       <div className="flex flex-col gap-4 py-3">
         {state.chatMessages.map((msg) => (
           <ChatBubble key={msg.id} message={msg} onApplyRoute={onApplyRoute} />
