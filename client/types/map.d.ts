@@ -77,6 +77,7 @@ export interface RouteCardData {
   distanceMiles: number;
   etaMinutes: number;
   safetyBadge: 'safe' | 'caution' | 'danger';
+  safetyScore?: number;
   terrain: string;
   tags: string[];
   polyline?: string;
