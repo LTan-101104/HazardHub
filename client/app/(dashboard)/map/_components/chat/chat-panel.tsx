@@ -40,6 +40,7 @@ function toRouteCards(routeOptions: ChatRouteOption[]): RouteCardData[] {
       distanceMiles: metersToMiles(option.distanceMeters),
       etaMinutes: secondsToMinutes(option.durationSeconds),
       safetyBadge: toSafetyBadge(recommendationTier),
+      safetyScore: option.safetyScore ?? undefined,
       terrain: recommendationTier.toLowerCase(),
       tags: [`${hazardCount} hazard${hazardCount === 1 ? '' : 's'}`],
       polyline: option.polyline,
@@ -108,9 +109,10 @@ function recommendationTierToRouteType(recommendationTier?: string): RouteInfo['
   return recommendationTier === 'RECOMMENDED' ? 'safest' : 'fastest';
 }
 
-function toSafetyPercent(safetyBadge: RouteCardData['safetyBadge']): number {
-  if (safetyBadge === 'safe') return 92;
-  if (safetyBadge === 'danger') return 55;
+function toSafetyPercent(card: RouteCardData): number {
+  if (card.safetyScore != null) return Math.round(card.safetyScore);
+  if (card.safetyBadge === 'safe') return 92;
+  if (card.safetyBadge === 'danger') return 55;
   return 74;
 }
 
@@ -244,7 +246,7 @@ export function ChatPanel() {
         toPosition: toPosition ?? fallbackDestination,
         distanceMiles: card.distanceMiles,
         etaMinutes: card.etaMinutes,
-        safetyPercent: toSafetyPercent(card.safetyBadge),
+        safetyPercent: toSafetyPercent(card),
         type: recommendationTierToRouteType(card.recommendationTier),
         hazards: [],
         description: card.summary || card.terrain,

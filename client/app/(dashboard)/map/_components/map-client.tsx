@@ -17,7 +17,8 @@ import { TurnInstructionCard } from './navigation/turn-instruction-card';
 import { NavigationBar } from './navigation/navigation-bar';
 import { DEFAULT_CENTER, HAZARD_SEARCH_RADIUS_METERS } from '@/lib/constants/map-config';
 import { useIsDesktop } from '@/lib/hooks/use-media-query';
-import { useDirections } from './hooks/use-directions';
+import { useDirections, metersToMiles, secondsToMinutes } from './hooks/use-directions';
+import { sendChatMessage } from '@/lib/actions/chat-action';
 import { useSOS } from './hooks/use-sos';
 import { useAuth } from '@/context/AuthContext';
 import { auth } from '@/lib/firebase';
@@ -221,24 +222,73 @@ function MapLayout() {
       if (result && result.routes.length > 0) {
         const [primary, ...alternates] = result.routes;
 
-        const activeRoute = { ...primary, type: 'safest' as const, safetyPercent: 92 };
-        const alternateRoute = alternates[0] ? { ...alternates[0], type: 'fastest' as const, safetyPercent: 74 } : undefined;
+        const activeRoute = { ...primary, type: 'safest' as const, safetyPercent: 0 };
+        const alternateRoute = alternates[0] ? { ...alternates[0], type: 'fastest' as const, safetyPercent: 0 } : undefined;
 
         dispatch({
           type: 'SET_ROUTE',
           payload: { active: activeRoute, alternate: alternateRoute },
         });
         dispatch({ type: 'SET_ERROR', payload: null });
+        dispatch({ type: 'SET_LOADING_ROUTE', payload: false });
+
+        // Enhance with Gemini AI-assessed values
+        try {
+          const currentUser = auth?.currentUser;
+          if (currentUser) {
+            const idToken = await currentUser.getIdToken();
+            const aiResponse = await sendChatMessage(idToken, {
+              message: 'Analyze the route options for safety, distance, and travel time. Provide your assessment.',
+              originLatitude: state.fromPosition.lat,
+              originLongitude: state.fromPosition.lng,
+              originAddress: state.fromLocation || undefined,
+              destinationLatitude: state.toPosition.lat,
+              destinationLongitude: state.toPosition.lng,
+              destinationAddress: state.toLocation || undefined,
+              vehicleType: 'CAR',
+            });
+
+            const opts = aiResponse.routeOptions ?? [];
+            if (opts.length > 0) {
+              const recommended = opts.find((r) => r.recommendationTier === 'RECOMMENDED') ?? opts[0];
+              const alternative = opts.find((r) => r.recommendationTier !== 'RECOMMENDED') ?? opts[1];
+
+              const enhancedActive = {
+                ...activeRoute,
+                distanceMiles: recommended.distanceMeters ? metersToMiles(recommended.distanceMeters) : activeRoute.distanceMiles,
+                etaMinutes: recommended.durationSeconds ? secondsToMinutes(recommended.durationSeconds) : activeRoute.etaMinutes,
+                safetyPercent: recommended.safetyScore != null ? Math.round(recommended.safetyScore) : activeRoute.safetyPercent,
+              };
+
+              let enhancedAlternate = alternateRoute;
+              if (alternateRoute && alternative) {
+                enhancedAlternate = {
+                  ...alternateRoute,
+                  distanceMiles: alternative.distanceMeters ? metersToMiles(alternative.distanceMeters) : alternateRoute.distanceMiles,
+                  etaMinutes: alternative.durationSeconds ? secondsToMinutes(alternative.durationSeconds) : alternateRoute.etaMinutes,
+                  safetyPercent: alternative.safetyScore != null ? Math.round(alternative.safetyScore) : alternateRoute.safetyPercent,
+                };
+              }
+
+              dispatch({
+                type: 'SET_ROUTE',
+                payload: { active: enhancedActive, alternate: enhancedAlternate },
+              });
+            }
+          }
+        } catch (err) {
+          console.error('Failed to get AI route assessment, keeping directions values:', err);
+        }
       } else {
         dispatch({ type: 'SET_ERROR', payload: 'Unable to calculate route. Please try different locations.' });
+        dispatch({ type: 'SET_LOADING_ROUTE', payload: false });
       }
 
-      dispatch({ type: 'SET_LOADING_ROUTE', payload: false });
       isCalculatingRef.current = false;
     };
 
     fetchRoute();
-  }, [state.fromPosition, state.toPosition, isReady, calculateRoute, dispatch]);
+  }, [state.fromPosition, state.toPosition, state.fromLocation, state.toLocation, isReady, calculateRoute, dispatch]);
 
   const showNavigationUI = state.viewState === 'navigating';
   const showBrowseOverlays = state.viewState !== 'navigating';

@@ -25,11 +25,11 @@ function generateRouteId(): string {
   return `route-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-function metersToMiles(meters: number): number {
+export function metersToMiles(meters: number): number {
   return Number((meters * 0.000621371).toFixed(1));
 }
 
-function secondsToMinutes(seconds: number): number {
+export function secondsToMinutes(seconds: number): number {
   return Math.round(seconds / 60);
 }
 
@@ -124,7 +124,7 @@ export function useDirections(): UseDirectionsReturn {
             toPosition: destination,
             distanceMiles: metersToMiles(distanceMeters),
             etaMinutes: secondsToMinutes(durationSeconds),
-            safetyPercent: isSafest ? 92 : 74,
+            safetyPercent: 0,
             type: isSafest ? 'safest' : 'fastest',
             hazards: [],
             description: route.summary || '',

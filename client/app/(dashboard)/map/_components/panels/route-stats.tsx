@@ -18,7 +18,7 @@ export function RouteStats() {
       accent: false,
     },
     {
-      value: route ? `${route.safetyPercent}%` : '—',
+      value: route ? (route.safetyPercent > 0 ? `${route.safetyPercent}%` : '...') : '—',
       label: 'Safety',
       accent: true,
     },
