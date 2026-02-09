@@ -1,5 +1,8 @@
 # HazardHub
 
+- Official website: [HazardHub](https://hazard-hub-pymz.vercel.app/)
+- Gemini Hackathon Devpost submission: [HazardHub submission](https://devpost.com/submit-to/27555-gemini-3-hackathon/manage/submissions/916634-hazardhub/)
+
 ## Inspiration
 
 Every year, over 42,000 people die in traffic crashes in the United States alone, and millions more are injured. What struck us was how many of these incidents are preventable — a driver hits debris that someone saw 10 minutes ago, a commuter takes a flooded road because no one flagged it, or a stranded motorist waits too long for help because they couldn't communicate their exact location. Existing navigation apps optimize for speed, not safety. We asked ourselves: **what if your GPS didn't just get you there faster, but got you there alive?**
