@@ -65,7 +65,8 @@ public class GoogleDirectionsServiceImpl implements GoogleDirectionsService {
     @SuppressWarnings("unchecked")
     public double extractDistanceMeters(Map<String, Object> directionsResponse) {
         List<Map<String, Object>> legs = extractAllLegs(directionsResponse);
-        if (legs == null) return 0;
+        if (legs == null)
+            return 0;
 
         double total = 0;
         for (Map<String, Object> leg : legs) {
@@ -81,7 +82,8 @@ public class GoogleDirectionsServiceImpl implements GoogleDirectionsService {
     @SuppressWarnings("unchecked")
     public int extractDurationSeconds(Map<String, Object> directionsResponse) {
         List<Map<String, Object>> legs = extractAllLegs(directionsResponse);
-        if (legs == null) return 0;
+        if (legs == null)
+            return 0;
 
         int total = 0;
         for (Map<String, Object> leg : legs) {
@@ -96,9 +98,11 @@ public class GoogleDirectionsServiceImpl implements GoogleDirectionsService {
     @SuppressWarnings("unchecked")
     private List<Map<String, Object>> extractAllLegs(Map<String, Object> directionsResponse) {
         List<Map<String, Object>> routes = (List<Map<String, Object>>) directionsResponse.get("routes");
-        if (routes == null || routes.isEmpty()) return null;
+        if (routes == null || routes.isEmpty())
+            return null;
         List<Map<String, Object>> legs = (List<Map<String, Object>>) routes.get(0).get("legs");
-        if (legs == null || legs.isEmpty()) return null;
+        if (legs == null || legs.isEmpty())
+            return null;
         return legs;
     }
 
@@ -113,6 +117,6 @@ public class GoogleDirectionsServiceImpl implements GoogleDirectionsService {
             builder.queryParam("waypoints", waypoints);
         }
 
-        return builder.build().toUriString();
+        return builder.build().encode().toUriString();
     }
 }
