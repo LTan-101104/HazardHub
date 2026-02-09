@@ -1,8 +1,15 @@
 package hazardhub.com.hub.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import hazardhub.com.hub.config.GeminiConfig;
 import hazardhub.com.hub.constants.HazardHubConstants;
+import hazardhub.com.hub.model.dto.ChatRequestDTO;
+import hazardhub.com.hub.model.dto.ChatResponseDTO;
+import hazardhub.com.hub.model.dto.ChatRouteOptionDTO;
+import hazardhub.com.hub.model.dto.HazardDTO;
 import hazardhub.com.hub.model.dto.ImageAnalysisResponseDTO;
+import hazardhub.com.hub.model.dto.RouteSuggestionResponseDTO;
 import hazardhub.com.hub.service.GeminiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,12 +20,13 @@ import org.springframework.web.client.RestClient;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /*
 The current approach relies temporarily store the image in base64 format in-memory in server, this is not a long-term solution.
-This is only implemented because gemini api is not config to read directly from firebase bucket yet. 
+This is only implemented because gemini api is not config to read directly from firebase bucket yet.
 Will need some better, well-rounded solution in the future
 */
 @Service
@@ -28,6 +36,7 @@ public class GeminiServiceImpl implements GeminiService {
 
         private final RestClient geminiRestClient;
         private final GeminiConfig geminiConfig;
+        private final ObjectMapper objectMapper = new ObjectMapper();
 
         @Override
         public ImageAnalysisResponseDTO analyzeHazardImage(String imageUrl) {
@@ -46,7 +55,7 @@ public class GeminiServiceImpl implements GeminiService {
                                 .retrieve()
                                 .body(Map.class);
 
-                String description = extractTextFromResponse(response);
+                String description = extractTextFromResponse(response, "Unable to analyze the image.");
 
                 log.info("Gemini analysis complete for image: {}", imageUrl);
                 return ImageAnalysisResponseDTO.builder()
@@ -54,8 +63,197 @@ public class GeminiServiceImpl implements GeminiService {
                                 .build();
         }
 
+        @Override
+        public ChatResponseDTO chat(ChatRequestDTO request, RouteSuggestionResponseDTO routeSuggestion,
+                        List<HazardDTO> hazards) {
+                List<ChatRouteOptionDTO> routeOptions = mapRouteOptions(routeSuggestion);
+                String prompt = buildChatPrompt(request, routeSuggestion, routeOptions, hazards);
+
+                String reply = null;
+                try {
+                        reply = generateChatReply(prompt);
+                } catch (Exception e) {
+                        log.error("Gemini chat generation failed", e);
+                }
+
+                if (reply == null || reply.isBlank()) {
+                        reply = buildFallbackReply(routeSuggestion, routeOptions);
+                }
+
+                return ChatResponseDTO.builder()
+                                .reply(reply.trim())
+                                .routeOptions(routeOptions)
+                                .build();
+        }
+
+        @SuppressWarnings("unchecked")
+        private String generateChatReply(String prompt) {
+                Map<String, Object> requestBody = Map.of(
+                                "contents", List.of(
+                                                Map.of("role", "user",
+                                                                "parts", List.of(Map.of("text", prompt)))));
+
+                String uri = String.format("/models/%s:generateContent?key=%s",
+                                geminiConfig.getModel(), geminiConfig.getApiKey());
+
+                Map<String, Object> response = geminiRestClient.post()
+                                .uri(uri)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .body(requestBody)
+                                .retrieve()
+                                .body(Map.class);
+
+                return extractTextFromResponse(response, null);
+        }
+
         private static final long MAX_IMAGE_BYTES = 20 * 1024 * 1024; // 20 MB guard
         private static final String ALLOWED_HOST = "firebasestorage.googleapis.com";
+
+        private String buildChatPrompt(ChatRequestDTO request,
+                        RouteSuggestionResponseDTO routeSuggestion,
+                        List<ChatRouteOptionDTO> routeOptions,
+                        List<HazardDTO> hazards) {
+                String routeSummary = routeSuggestion != null
+                                && routeSuggestion.getMessage() != null
+                                && !routeSuggestion.getMessage().isBlank()
+                                                ? routeSuggestion.getMessage().trim()
+                                                : "No precomputed route summary.";
+                String routeOptionsJson = serializeRoutesForPrompt(routeOptions);
+                String routeContextJson = serializeRouteContextForPrompt(request);
+                String hazardsJson = serializeHazardsForPrompt(hazards);
+
+                return """
+                                %s
+
+                                User message:
+                                %s
+
+                                Route context (origin, destination, vehicle):
+                                %s
+
+                                Nearby active hazards from backend:
+                                %s
+
+                                Route summary:
+                                %s
+
+                                Route options:
+                                %s
+
+                                Generate a single response for the user.
+                                """.formatted(
+                                HazardHubConstants.HazardGemini.CHAT_SYSTEM_PROMPT,
+                                request.getMessage(),
+                                routeContextJson,
+                                hazardsJson,
+                                routeSummary,
+                                routeOptionsJson);
+        }
+
+        private String serializeRouteContextForPrompt(ChatRequestDTO request) {
+                if (request == null || !request.hasRouteContext()) {
+                        return "{}";
+                }
+
+                Map<String, Object> routeContext = new LinkedHashMap<>();
+                routeContext.put("originLatitude", request.getOriginLatitude());
+                routeContext.put("originLongitude", request.getOriginLongitude());
+                routeContext.put("originAddress", request.getOriginAddress());
+                routeContext.put("destinationLatitude", request.getDestinationLatitude());
+                routeContext.put("destinationLongitude", request.getDestinationLongitude());
+                routeContext.put("destinationAddress", request.getDestinationAddress());
+                routeContext.put("vehicleType", request.getVehicleType() != null ? request.getVehicleType().name() : "CAR");
+
+                try {
+                        return objectMapper.writeValueAsString(routeContext);
+                } catch (JsonProcessingException e) {
+                        log.warn("Failed to serialize route context for prompt: {}", e.getMessage());
+                        return "{}";
+                }
+        }
+
+        private String serializeHazardsForPrompt(List<HazardDTO> hazards) {
+                if (hazards == null || hazards.isEmpty()) {
+                        return "[]";
+                }
+
+                List<Map<String, Object>> hazardSummaries = hazards.stream().map(hazard -> {
+                        Map<String, Object> item = new LinkedHashMap<>();
+                        item.put("id", hazard.getId());
+                        item.put("severity", hazard.getSeverity() != null ? hazard.getSeverity().name() : null);
+                        item.put("description", hazard.getDescription());
+                        item.put("latitude", hazard.getLatitude());
+                        item.put("longitude", hazard.getLongitude());
+                        item.put("address", hazard.getAddress());
+                        item.put("affectedRadiusMeters", hazard.getAffectedRadiusMeters());
+                        item.put("verificationCount", hazard.getVerificationCount());
+                        item.put("disputeCount", hazard.getDisputeCount());
+                        return item;
+                }).toList();
+
+                try {
+                        return objectMapper.writeValueAsString(hazardSummaries);
+                } catch (JsonProcessingException e) {
+                        log.warn("Failed to serialize hazards for prompt: {}", e.getMessage());
+                        return "[]";
+                }
+        }
+
+        private String serializeRoutesForPrompt(List<ChatRouteOptionDTO> routeOptions) {
+                if (routeOptions == null || routeOptions.isEmpty()) {
+                        return "[]";
+                }
+
+                List<Map<String, Object>> routeSummaries = routeOptions.stream().map(route -> {
+                        Map<String, Object> item = new LinkedHashMap<>();
+                        item.put("name", route.getName());
+                        item.put("recommendationTier", route.getRecommendationTier());
+                        item.put("safetyScore", route.getSafetyScore());
+                        item.put("hazardCount", route.getHazardCount());
+                        item.put("distanceMeters", route.getDistanceMeters());
+                        item.put("durationSeconds", route.getDurationSeconds());
+                        item.put("summary", route.getSummary());
+                        return item;
+                }).toList();
+
+                try {
+                        return objectMapper.writeValueAsString(routeSummaries);
+                } catch (JsonProcessingException e) {
+                        log.warn("Failed to serialize route options for prompt: {}", e.getMessage());
+                        return "[]";
+                }
+        }
+
+        private List<ChatRouteOptionDTO> mapRouteOptions(RouteSuggestionResponseDTO routeSuggestion) {
+                if (routeSuggestion == null || routeSuggestion.getRoutes() == null || routeSuggestion.getRoutes().isEmpty()) {
+                        return List.of();
+                }
+
+                return routeSuggestion.getRoutes().stream().map(route -> ChatRouteOptionDTO.builder()
+                                .name(route.getName())
+                                .recommendationTier(route.getRecommendationTier())
+                                .safetyScore(route.getSafetyScore())
+                                .hazardCount(route.getHazardCount())
+                                .summary(route.getAiSummary())
+                                .distanceMeters(route.getDistanceMeters())
+                                .durationSeconds(route.getDurationSeconds())
+                                .polyline(route.getPolyline())
+                                .build()).toList();
+        }
+
+        private String buildFallbackReply(RouteSuggestionResponseDTO routeSuggestion, List<ChatRouteOptionDTO> routeOptions) {
+                if (routeSuggestion != null
+                                && routeSuggestion.getMessage() != null
+                                && !routeSuggestion.getMessage().isBlank()) {
+                        return routeSuggestion.getMessage();
+                }
+
+                if (routeOptions != null && !routeOptions.isEmpty()) {
+                        return "I found route options and highlighted the safest tradeoffs for your trip.";
+                }
+
+                return "I can help with hazard-aware navigation. Share your route details and I will suggest safer options.";
+        }
 
         private Map<String, Object> buildRequestBody(String imageUrl) {
                 // SSRF guard — only allow downloads from Firebase Storage
@@ -106,32 +304,32 @@ public class GeminiServiceImpl implements GeminiService {
         }
 
         @SuppressWarnings("unchecked")
-        private String extractTextFromResponse(Map<String, Object> response) {
+        private String extractTextFromResponse(Map<String, Object> response, String defaultText) {
                 if (response == null) {
-                        return "Unable to analyze the image.";
+                        return defaultText;
                 }
 
                 try {
                         List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get("candidates");
                         if (candidates == null || candidates.isEmpty()) {
-                                return "Unable to analyze the image.";
+                                return defaultText;
                         }
 
                         Map<String, Object> content = (Map<String, Object>) candidates.get(0).get("content");
                         if (content == null) {
-                                return "Unable to analyze the image.";
+                                return defaultText;
                         }
 
                         List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
                         if (parts == null || parts.isEmpty()) {
-                                return "Unable to analyze the image.";
+                                return defaultText;
                         }
 
                         String text = (String) parts.get(0).get("text");
-                        return text != null ? text.trim() : "Unable to analyze the image.";
+                        return text != null ? text.trim() : defaultText;
                 } catch (ClassCastException e) {
                         log.error("Failed to parse Gemini response", e);
-                        return "Unable to analyze the image.";
+                        return defaultText;
                 }
         }
 

@@ -9,8 +9,14 @@ const badgeColors = {
   danger: { bg: 'bg-[#FF5252]/15', text: 'text-[#FF5252]' },
 };
 
-export function RouteSuggestionCard({ card }: { card: RouteCardData }) {
+interface RouteSuggestionCardProps {
+  card: RouteCardData;
+  onApply: () => void;
+}
+
+export function RouteSuggestionCard({ card, onApply }: RouteSuggestionCardProps) {
   const badge = badgeColors[card.safetyBadge];
+  const canApply = Boolean(card.polyline);
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-[#2E2E2E] bg-[#1A1A1A] p-3">
@@ -38,9 +44,13 @@ export function RouteSuggestionCard({ card }: { card: RouteCardData }) {
       </div>
 
       {/* Use route button */}
-      <button className="flex h-10 items-center justify-center gap-2 rounded-xl bg-[#FF8400] font-mono text-sm font-semibold text-black transition-colors hover:bg-[#e67700]">
+      <button
+        onClick={onApply}
+        disabled={!canApply}
+        className="flex h-10 items-center justify-center gap-2 rounded-xl bg-[#FF8400] font-mono text-sm font-semibold text-black transition-colors hover:bg-[#e67700] disabled:cursor-not-allowed disabled:opacity-60"
+      >
         <Check className="size-4" />
-        Use This Route
+        Apply to Map
       </button>
     </div>
   );

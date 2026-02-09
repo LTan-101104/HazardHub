@@ -25,7 +25,7 @@ public class SecurityConfig {
         @Autowired(required = false)
         private FirebaseAuthFilter firebaseAuthFilter;
 
-        @Value("${app.cors.allowed-origins:https://localhost:3000}")
+        @Value("${app.cors.allowed-origins:}")
         private String allowedOrigins;
 
         @Bean
@@ -57,7 +57,10 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-                List<String> origins = Arrays.asList(allowedOrigins.split(","));
+                List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                                .map(String::trim)
+                                .filter(origin -> !origin.isEmpty())
+                                .toList();
                 configuration.setAllowedOrigins(origins);
                 configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                 configuration.setAllowedHeaders(List.of("*"));

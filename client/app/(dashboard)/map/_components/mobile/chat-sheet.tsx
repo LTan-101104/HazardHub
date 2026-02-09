@@ -25,7 +25,7 @@ export function ChatSheet() {
         <div className="flex justify-center py-3">
           <div className="h-1 w-10 rounded-full bg-[#B8B9B6]" />
         </div>
-        <div className="flex h-[calc(75dvh-28px)] flex-col">
+        <div className="flex h-[calc(75dvh-28px)] min-h-0 flex-col">
           <ChatPanel />
         </div>
       </SheetContent>

@@ -69,6 +69,7 @@ export interface ChatMessage {
   content: string;
   timestamp: string;
   routeCard?: RouteCardData;
+  routeCards?: RouteCardData[];
 }
 
 export interface RouteCardData {
@@ -78,6 +79,10 @@ export interface RouteCardData {
   safetyBadge: 'safe' | 'caution' | 'danger';
   terrain: string;
   tags: string[];
+  polyline?: string;
+  summary?: string;
+  recommendationTier?: string;
+  hazardCount?: number;
 }
 
 export interface TurnInstruction {
