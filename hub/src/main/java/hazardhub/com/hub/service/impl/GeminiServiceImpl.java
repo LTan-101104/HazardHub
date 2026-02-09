@@ -26,7 +26,7 @@ import java.util.Map;
 
 /*
 The current approach relies temporarily store the image in base64 format in-memory in server, this is not a long-term solution.
-This is only implemented because gemini api is not config to read directly from firebase bucket yet. 
+This is only implemented because gemini api is not config to read directly from firebase bucket yet.
 Will need some better, well-rounded solution in the future
 */
 @Service
@@ -36,7 +36,7 @@ public class GeminiServiceImpl implements GeminiService {
 
         private final RestClient geminiRestClient;
         private final GeminiConfig geminiConfig;
-        private final ObjectMapper objectMapper;
+        private final ObjectMapper objectMapper = new ObjectMapper();
 
         @Override
         public ImageAnalysisResponseDTO analyzeHazardImage(String imageUrl) {
