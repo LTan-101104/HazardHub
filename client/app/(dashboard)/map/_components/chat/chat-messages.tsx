@@ -5,8 +5,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatBubble } from './chat-bubble';
 import { useMap } from '../map-provider';
 import { Sparkles } from 'lucide-react';
+import type { RouteCardData } from '@/types/map';
 
-export function ChatMessages({ isSending }: { isSending: boolean }) {
+interface ChatMessagesProps {
+  isSending: boolean;
+  onApplyRoute: (card: RouteCardData) => void;
+}
+
+export function ChatMessages({ isSending, onApplyRoute }: ChatMessagesProps) {
   const { state } = useMap();
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -18,7 +24,7 @@ export function ChatMessages({ isSending }: { isSending: boolean }) {
     <ScrollArea className="flex-1 px-4">
       <div className="flex flex-col gap-4 py-3">
         {state.chatMessages.map((msg) => (
-          <ChatBubble key={msg.id} message={msg} />
+          <ChatBubble key={msg.id} message={msg} onApplyRoute={onApplyRoute} />
         ))}
         {isSending && (
           <div className="flex gap-2">

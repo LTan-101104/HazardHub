@@ -8,10 +8,11 @@ import { ChatInput } from './chat-input';
 import { useMap } from '../map-provider';
 import { auth } from '@/lib/firebase';
 import { sendChatMessage, type ChatRequestPayload, type ChatRouteOption } from '@/lib/actions/chat-action';
-import type { RouteCardData } from '@/types/map';
+import type { LatLng, RouteCardData, RouteInfo } from '@/types/map';
 
 const STARTER_MESSAGE = 'Tell me where you are going and I can suggest safer route options around hazards.';
 const ERROR_MESSAGE = 'Unable to reach AI assistant right now. Please try again in a moment.';
+const AUTO_ROUTE_PROMPT_SUFFIX = 'Please suggest the safest route options and explain the tradeoffs.';
 
 function toSafetyBadge(tier?: string): RouteCardData['safetyBadge'] {
   if (tier === 'RECOMMENDED') return 'safe';
@@ -41,14 +42,70 @@ function toRouteCards(routeOptions: ChatRouteOption[]): RouteCardData[] {
       safetyBadge: toSafetyBadge(recommendationTier),
       terrain: recommendationTier.toLowerCase(),
       tags: [`${hazardCount} hazard${hazardCount === 1 ? '' : 's'}`],
+      polyline: option.polyline,
+      summary: option.summary,
+      recommendationTier,
+      hazardCount,
     };
   });
+}
+
+function decodePolyline(encoded: string): LatLng[] {
+  const points: LatLng[] = [];
+  let index = 0;
+  let latitude = 0;
+  let longitude = 0;
+
+  while (index < encoded.length) {
+    let shift = 0;
+    let result = 0;
+    let byte: number;
+
+    do {
+      byte = encoded.charCodeAt(index++) - 63;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+
+    const deltaLat = result & 1 ? ~(result >> 1) : result >> 1;
+    latitude += deltaLat;
+
+    shift = 0;
+    result = 0;
+
+    do {
+      byte = encoded.charCodeAt(index++) - 63;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+
+    const deltaLng = result & 1 ? ~(result >> 1) : result >> 1;
+    longitude += deltaLng;
+
+    points.push({
+      lat: latitude / 1e5,
+      lng: longitude / 1e5,
+    });
+  }
+
+  return points;
+}
+
+function recommendationTierToRouteType(recommendationTier?: string): RouteInfo['type'] {
+  return recommendationTier === 'RECOMMENDED' ? 'safest' : 'fastest';
+}
+
+function toSafetyPercent(safetyBadge: RouteCardData['safetyBadge']): number {
+  if (safetyBadge === 'safe') return 92;
+  if (safetyBadge === 'danger') return 55;
+  return 74;
 }
 
 export function ChatPanel() {
   const { state, dispatch } = useMap();
   const [isSending, setIsSending] = useState(false);
   const seededMessageRef = useRef(false);
+  const autoRouteRequestKeyRef = useRef<string | null>(null);
 
   const { fromPosition, toPosition, fromLocation, toLocation, chatMessages } = state;
 
@@ -134,10 +191,65 @@ export function ChatPanel() {
     [dispatch, fromLocation, fromPosition, isSending, toLocation, toPosition],
   );
 
+  useEffect(() => {
+    if (!state.isChatOpen || state.viewState !== 'chat') return;
+    if (!fromPosition || !toPosition) return;
+
+    const routeKey = `${fromPosition.lat.toFixed(5)},${fromPosition.lng.toFixed(5)}->${toPosition.lat.toFixed(5)},${toPosition.lng.toFixed(5)}`;
+    if (autoRouteRequestKeyRef.current === routeKey) return;
+    autoRouteRequestKeyRef.current = routeKey;
+
+    const originLabel = fromLocation?.trim() || `${fromPosition.lat.toFixed(5)}, ${fromPosition.lng.toFixed(5)}`;
+    const destinationLabel = toLocation?.trim() || `${toPosition.lat.toFixed(5)}, ${toPosition.lng.toFixed(5)}`;
+    const autoPrompt = `I want to travel from ${originLabel} to ${destinationLabel}. ${AUTO_ROUTE_PROMPT_SUFFIX}`;
+
+    void handleSendMessage(autoPrompt);
+  }, [fromLocation, fromPosition, handleSendMessage, state.isChatOpen, state.viewState, toLocation, toPosition]);
+
+  const handleApplyRoute = useCallback(
+    (card: RouteCardData) => {
+      if (!card.polyline) {
+        dispatch({ type: 'SET_ERROR', payload: 'This route cannot be applied because polyline data is missing.' });
+        return;
+      }
+
+      const path = decodePolyline(card.polyline);
+      if (path.length === 0) {
+        dispatch({ type: 'SET_ERROR', payload: 'Unable to apply route path from AI response.' });
+        return;
+      }
+
+      const fallbackOrigin = path[0];
+      const fallbackDestination = path[path.length - 1];
+
+      const activeRoute: RouteInfo = {
+        id: crypto.randomUUID(),
+        name: card.name,
+        from: fromLocation || 'Origin',
+        to: toLocation || 'Destination',
+        fromPosition: fromPosition ?? fallbackOrigin,
+        toPosition: toPosition ?? fallbackDestination,
+        distanceMiles: card.distanceMiles,
+        etaMinutes: card.etaMinutes,
+        safetyPercent: toSafetyPercent(card.safetyBadge),
+        type: recommendationTierToRouteType(card.recommendationTier),
+        hazards: [],
+        description: card.summary || card.terrain,
+        path,
+        steps: [],
+      };
+
+      dispatch({ type: 'SET_ROUTE', payload: { active: activeRoute } });
+      dispatch({ type: 'TOGGLE_CHAT', payload: false });
+      dispatch({ type: 'SET_ERROR', payload: null });
+    },
+    [dispatch, fromLocation, fromPosition, toLocation, toPosition],
+  );
+
   return (
     <div className="flex h-full flex-col">
       <ChatHeader />
-      <ChatMessages isSending={isSending} />
+      <ChatMessages isSending={isSending} onApplyRoute={handleApplyRoute} />
       <QuickActions onSelect={(value) => void handleSendMessage(value)} disabled={isSending} />
       <ChatInput onSend={handleSendMessage} isSending={isSending} />
     </div>

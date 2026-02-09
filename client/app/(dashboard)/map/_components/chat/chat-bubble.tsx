@@ -2,9 +2,14 @@
 
 import { Sparkles } from 'lucide-react';
 import { RouteSuggestionCard } from './route-suggestion-card';
-import type { ChatMessage } from '@/types/map';
+import type { ChatMessage, RouteCardData } from '@/types/map';
 
-export function ChatBubble({ message }: { message: ChatMessage }) {
+interface ChatBubbleProps {
+  message: ChatMessage;
+  onApplyRoute: (card: RouteCardData) => void;
+}
+
+export function ChatBubble({ message, onApplyRoute }: ChatBubbleProps) {
   const routeCards = message.routeCards ?? (message.routeCard ? [message.routeCard] : []);
 
   if (message.role === 'user') {
@@ -25,7 +30,7 @@ export function ChatBubble({ message }: { message: ChatMessage }) {
       <div className="flex max-w-[85%] flex-col gap-3">
         <p className="text-sm leading-relaxed text-[#B8B9B6]">{message.content}</p>
         {routeCards.map((card, index) => (
-          <RouteSuggestionCard key={`${message.id}-route-${index}`} card={card} />
+          <RouteSuggestionCard key={`${message.id}-route-${index}`} card={card} onApply={() => onApplyRoute(card)} />
         ))}
       </div>
     </div>

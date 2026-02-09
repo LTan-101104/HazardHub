@@ -56,6 +56,7 @@ public class AIController {
     @Operation(summary = "Chat with Gemini AI route assistant", description = "Returns a conversational answer and optional route options when origin/destination is provided")
     public ResponseEntity<ChatResponseDTO> chat(@Valid @RequestBody ChatRequestDTO request) {
         RouteSuggestionResponseDTO routeSuggestion = null;
+        List<HazardDTO> nearbyHazards = List.of();
 
         if (request.hasRouteContext()) {
             RouteSuggestionRequestDTO routeRequest = RouteSuggestionRequestDTO.builder()
@@ -69,14 +70,22 @@ public class AIController {
                     .userMessage(request.getMessage())
                     .build();
 
-            routeSuggestion = suggestRoutesInternal(routeRequest);
+            nearbyHazards = findNearbyActiveHazards(routeRequest);
+            routeSuggestion = routeSuggestionService.suggestRoutes(routeRequest, nearbyHazards);
         }
 
-        ChatResponseDTO response = geminiService.chat(request, routeSuggestion);
+        ChatResponseDTO response = geminiService.chat(request, routeSuggestion, nearbyHazards);
         return ResponseEntity.ok(response);
     }
 
     private RouteSuggestionResponseDTO suggestRoutesInternal(RouteSuggestionRequestDTO request) {
+        List<HazardDTO> hazards = findNearbyActiveHazards(request);
+
+        // Gemini + Directions API
+        return routeSuggestionService.suggestRoutes(request, hazards);
+    }
+
+    private List<HazardDTO> findNearbyActiveHazards(RouteSuggestionRequestDTO request) {
         // Compute search area — midpoint of origin/destination
         double midLat = (request.getOriginLatitude() + request.getDestinationLatitude()) / 2;
         double midLng = (request.getOriginLongitude() + request.getDestinationLongitude()) / 2;
@@ -88,10 +97,7 @@ public class AIController {
         double searchRadius = Math.max(distanceBetween * 1.5, 5000);
 
         // Fetch nearby active hazards
-        List<HazardDTO> hazards = hazardService.findNearbyActive(midLng, midLat, searchRadius);
-
-        // Gemini + Directions API
-        return routeSuggestionService.suggestRoutes(request, hazards);
+        return hazardService.findNearbyActive(midLng, midLat, searchRadius);
     }
 
     // TODO: an alternative search formula is corridor search, which would be more

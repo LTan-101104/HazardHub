@@ -9,6 +9,7 @@ import hazardhub.com.hub.constants.HazardHubConstants;
 import hazardhub.com.hub.model.dto.ChatRequestDTO;
 import hazardhub.com.hub.model.dto.ChatResponseDTO;
 import hazardhub.com.hub.model.dto.ChatRouteOptionDTO;
+import hazardhub.com.hub.model.dto.HazardDTO;
 import hazardhub.com.hub.model.dto.ImageAnalysisResponseDTO;
 import hazardhub.com.hub.model.dto.RouteSuggestionResponseDTO;
 import hazardhub.com.hub.service.GeminiService;
@@ -65,9 +66,10 @@ public class GeminiServiceImpl implements GeminiService {
         }
 
         @Override
-        public ChatResponseDTO chat(ChatRequestDTO request, RouteSuggestionResponseDTO routeSuggestion) {
+        public ChatResponseDTO chat(ChatRequestDTO request, RouteSuggestionResponseDTO routeSuggestion,
+                        List<HazardDTO> hazards) {
                 List<ChatRouteOptionDTO> routeOptions = mapRouteOptions(routeSuggestion);
-                String prompt = buildChatPrompt(request, routeSuggestion, routeOptions);
+                String prompt = buildChatPrompt(request, routeSuggestion, routeOptions, hazards);
 
                 String reply = null;
                 try {
@@ -96,18 +98,27 @@ public class GeminiServiceImpl implements GeminiService {
 
         private String buildChatPrompt(ChatRequestDTO request,
                         RouteSuggestionResponseDTO routeSuggestion,
-                        List<ChatRouteOptionDTO> routeOptions) {
+                        List<ChatRouteOptionDTO> routeOptions,
+                        List<HazardDTO> hazards) {
                 String routeSummary = routeSuggestion != null
                                 && routeSuggestion.getMessage() != null
                                 && !routeSuggestion.getMessage().isBlank()
                                                 ? routeSuggestion.getMessage().trim()
                                                 : "No precomputed route summary.";
                 String routeOptionsJson = serializeRoutesForPrompt(routeOptions);
+                String routeContextJson = serializeRouteContextForPrompt(request);
+                String hazardsJson = serializeHazardsForPrompt(hazards);
 
                 return """
                                 %s
 
                                 User message:
+                                %s
+
+                                Route context (origin, destination, vehicle):
+                                %s
+
+                                Nearby active hazards from backend:
                                 %s
 
                                 Route summary:
@@ -120,8 +131,59 @@ public class GeminiServiceImpl implements GeminiService {
                                 """.formatted(
                                 HazardHubConstants.HazardGemini.CHAT_SYSTEM_PROMPT,
                                 request.getMessage(),
+                                routeContextJson,
+                                hazardsJson,
                                 routeSummary,
                                 routeOptionsJson);
+        }
+
+        private String serializeRouteContextForPrompt(ChatRequestDTO request) {
+                if (request == null || !request.hasRouteContext()) {
+                        return "{}";
+                }
+
+                Map<String, Object> routeContext = new LinkedHashMap<>();
+                routeContext.put("originLatitude", request.getOriginLatitude());
+                routeContext.put("originLongitude", request.getOriginLongitude());
+                routeContext.put("originAddress", request.getOriginAddress());
+                routeContext.put("destinationLatitude", request.getDestinationLatitude());
+                routeContext.put("destinationLongitude", request.getDestinationLongitude());
+                routeContext.put("destinationAddress", request.getDestinationAddress());
+                routeContext.put("vehicleType", request.getVehicleType() != null ? request.getVehicleType().name() : "CAR");
+
+                try {
+                        return objectMapper.writeValueAsString(routeContext);
+                } catch (JsonProcessingException e) {
+                        log.warn("Failed to serialize route context for prompt: {}", e.getMessage());
+                        return "{}";
+                }
+        }
+
+        private String serializeHazardsForPrompt(List<HazardDTO> hazards) {
+                if (hazards == null || hazards.isEmpty()) {
+                        return "[]";
+                }
+
+                List<Map<String, Object>> hazardSummaries = hazards.stream().map(hazard -> {
+                        Map<String, Object> item = new LinkedHashMap<>();
+                        item.put("id", hazard.getId());
+                        item.put("severity", hazard.getSeverity() != null ? hazard.getSeverity().name() : null);
+                        item.put("description", hazard.getDescription());
+                        item.put("latitude", hazard.getLatitude());
+                        item.put("longitude", hazard.getLongitude());
+                        item.put("address", hazard.getAddress());
+                        item.put("affectedRadiusMeters", hazard.getAffectedRadiusMeters());
+                        item.put("verificationCount", hazard.getVerificationCount());
+                        item.put("disputeCount", hazard.getDisputeCount());
+                        return item;
+                }).toList();
+
+                try {
+                        return objectMapper.writeValueAsString(hazardSummaries);
+                } catch (JsonProcessingException e) {
+                        log.warn("Failed to serialize hazards for prompt: {}", e.getMessage());
+                        return "[]";
+                }
         }
 
         private String serializeRoutesForPrompt(List<ChatRouteOptionDTO> routeOptions) {
