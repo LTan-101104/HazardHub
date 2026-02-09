@@ -1,10 +1,13 @@
 package hazardhub.com.hub.controller;
 
+import hazardhub.com.hub.model.dto.ChatRequestDTO;
+import hazardhub.com.hub.model.dto.ChatResponseDTO;
 import hazardhub.com.hub.model.dto.HazardDTO;
 import hazardhub.com.hub.model.dto.ImageAnalysisRequestDTO;
 import hazardhub.com.hub.model.dto.ImageAnalysisResponseDTO;
 import hazardhub.com.hub.model.dto.RouteSuggestionRequestDTO;
 import hazardhub.com.hub.model.dto.RouteSuggestionResponseDTO;
+import hazardhub.com.hub.model.enums.VehicleType;
 import hazardhub.com.hub.service.GeminiService;
 import hazardhub.com.hub.service.HazardService;
 import hazardhub.com.hub.service.RouteSuggestionService;
@@ -44,7 +47,36 @@ public class AIController {
     @Operation(summary = "AI-powered route suggestions avoiding hazards", description = "Uses Gemini AI to analyze hazards and suggest safe routes with Google Directions API polylines")
     public ResponseEntity<RouteSuggestionResponseDTO> suggestRoutes(
             @Valid @RequestBody RouteSuggestionRequestDTO request) {
+        RouteSuggestionResponseDTO response = suggestRoutesInternal(request);
 
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/chat")
+    @Operation(summary = "Chat with Gemini AI route assistant", description = "Returns a conversational answer and optional route options when origin/destination is provided")
+    public ResponseEntity<ChatResponseDTO> chat(@Valid @RequestBody ChatRequestDTO request) {
+        RouteSuggestionResponseDTO routeSuggestion = null;
+
+        if (request.hasRouteContext()) {
+            RouteSuggestionRequestDTO routeRequest = RouteSuggestionRequestDTO.builder()
+                    .originLongitude(request.getOriginLongitude())
+                    .originLatitude(request.getOriginLatitude())
+                    .originAddress(request.getOriginAddress())
+                    .destinationLongitude(request.getDestinationLongitude())
+                    .destinationLatitude(request.getDestinationLatitude())
+                    .destinationAddress(request.getDestinationAddress())
+                    .vehicleType(request.getVehicleType() != null ? request.getVehicleType() : VehicleType.CAR)
+                    .userMessage(request.getMessage())
+                    .build();
+
+            routeSuggestion = suggestRoutesInternal(routeRequest);
+        }
+
+        ChatResponseDTO response = geminiService.chat(request, routeSuggestion);
+        return ResponseEntity.ok(response);
+    }
+
+    private RouteSuggestionResponseDTO suggestRoutesInternal(RouteSuggestionRequestDTO request) {
         // Compute search area — midpoint of origin/destination
         double midLat = (request.getOriginLatitude() + request.getDestinationLatitude()) / 2;
         double midLng = (request.getOriginLongitude() + request.getDestinationLongitude()) / 2;
@@ -59,9 +91,7 @@ public class AIController {
         List<HazardDTO> hazards = hazardService.findNearbyActive(midLng, midLat, searchRadius);
 
         // Gemini + Directions API
-        RouteSuggestionResponseDTO response = routeSuggestionService.suggestRoutes(request, hazards);
-
-        return ResponseEntity.ok(response);
+        return routeSuggestionService.suggestRoutes(request, hazards);
     }
 
     // TODO: an alternative search formula is corridor search, which would be more

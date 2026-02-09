@@ -1,8 +1,16 @@
 package hazardhub.com.hub.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.genai.Client;
+import com.google.genai.types.GenerateContentResponse;
 import hazardhub.com.hub.config.GeminiConfig;
 import hazardhub.com.hub.constants.HazardHubConstants;
+import hazardhub.com.hub.model.dto.ChatRequestDTO;
+import hazardhub.com.hub.model.dto.ChatResponseDTO;
+import hazardhub.com.hub.model.dto.ChatRouteOptionDTO;
 import hazardhub.com.hub.model.dto.ImageAnalysisResponseDTO;
+import hazardhub.com.hub.model.dto.RouteSuggestionResponseDTO;
 import hazardhub.com.hub.service.GeminiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +21,7 @@ import org.springframework.web.client.RestClient;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +37,7 @@ public class GeminiServiceImpl implements GeminiService {
 
         private final RestClient geminiRestClient;
         private final GeminiConfig geminiConfig;
+        private final ObjectMapper objectMapper;
 
         @Override
         public ImageAnalysisResponseDTO analyzeHazardImage(String imageUrl) {
@@ -54,8 +64,121 @@ public class GeminiServiceImpl implements GeminiService {
                                 .build();
         }
 
+        @Override
+        public ChatResponseDTO chat(ChatRequestDTO request, RouteSuggestionResponseDTO routeSuggestion) {
+                List<ChatRouteOptionDTO> routeOptions = mapRouteOptions(routeSuggestion);
+                String prompt = buildChatPrompt(request, routeSuggestion, routeOptions);
+
+                String reply = null;
+                try {
+                        Client client = new Client();
+                        GenerateContentResponse response = client.models.generateContent(
+                                        geminiConfig.getModel(),
+                                        prompt,
+                                        null);
+                        reply = response != null ? response.text() : null;
+                } catch (Exception e) {
+                        log.error("Gemini chat generation failed", e);
+                }
+
+                if (reply == null || reply.isBlank()) {
+                        reply = buildFallbackReply(routeSuggestion, routeOptions);
+                }
+
+                return ChatResponseDTO.builder()
+                                .reply(reply.trim())
+                                .routeOptions(routeOptions)
+                                .build();
+        }
+
         private static final long MAX_IMAGE_BYTES = 20 * 1024 * 1024; // 20 MB guard
         private static final String ALLOWED_HOST = "firebasestorage.googleapis.com";
+
+        private String buildChatPrompt(ChatRequestDTO request,
+                        RouteSuggestionResponseDTO routeSuggestion,
+                        List<ChatRouteOptionDTO> routeOptions) {
+                String routeSummary = routeSuggestion != null
+                                && routeSuggestion.getMessage() != null
+                                && !routeSuggestion.getMessage().isBlank()
+                                                ? routeSuggestion.getMessage().trim()
+                                                : "No precomputed route summary.";
+                String routeOptionsJson = serializeRoutesForPrompt(routeOptions);
+
+                return """
+                                %s
+
+                                User message:
+                                %s
+
+                                Route summary:
+                                %s
+
+                                Route options:
+                                %s
+
+                                Generate a single response for the user.
+                                """.formatted(
+                                HazardHubConstants.HazardGemini.CHAT_SYSTEM_PROMPT,
+                                request.getMessage(),
+                                routeSummary,
+                                routeOptionsJson);
+        }
+
+        private String serializeRoutesForPrompt(List<ChatRouteOptionDTO> routeOptions) {
+                if (routeOptions == null || routeOptions.isEmpty()) {
+                        return "[]";
+                }
+
+                List<Map<String, Object>> routeSummaries = routeOptions.stream().map(route -> {
+                        Map<String, Object> item = new LinkedHashMap<>();
+                        item.put("name", route.getName());
+                        item.put("recommendationTier", route.getRecommendationTier());
+                        item.put("safetyScore", route.getSafetyScore());
+                        item.put("hazardCount", route.getHazardCount());
+                        item.put("distanceMeters", route.getDistanceMeters());
+                        item.put("durationSeconds", route.getDurationSeconds());
+                        item.put("summary", route.getSummary());
+                        return item;
+                }).toList();
+
+                try {
+                        return objectMapper.writeValueAsString(routeSummaries);
+                } catch (JsonProcessingException e) {
+                        log.warn("Failed to serialize route options for prompt: {}", e.getMessage());
+                        return "[]";
+                }
+        }
+
+        private List<ChatRouteOptionDTO> mapRouteOptions(RouteSuggestionResponseDTO routeSuggestion) {
+                if (routeSuggestion == null || routeSuggestion.getRoutes() == null || routeSuggestion.getRoutes().isEmpty()) {
+                        return List.of();
+                }
+
+                return routeSuggestion.getRoutes().stream().map(route -> ChatRouteOptionDTO.builder()
+                                .name(route.getName())
+                                .recommendationTier(route.getRecommendationTier())
+                                .safetyScore(route.getSafetyScore())
+                                .hazardCount(route.getHazardCount())
+                                .summary(route.getAiSummary())
+                                .distanceMeters(route.getDistanceMeters())
+                                .durationSeconds(route.getDurationSeconds())
+                                .polyline(route.getPolyline())
+                                .build()).toList();
+        }
+
+        private String buildFallbackReply(RouteSuggestionResponseDTO routeSuggestion, List<ChatRouteOptionDTO> routeOptions) {
+                if (routeSuggestion != null
+                                && routeSuggestion.getMessage() != null
+                                && !routeSuggestion.getMessage().isBlank()) {
+                        return routeSuggestion.getMessage();
+                }
+
+                if (routeOptions != null && !routeOptions.isEmpty()) {
+                        return "I found route options and highlighted the safest tradeoffs for your trip.";
+                }
+
+                return "I can help with hazard-aware navigation. Share your route details and I will suggest safer options.";
+        }
 
         private Map<String, Object> buildRequestBody(String imageUrl) {
                 // SSRF guard — only allow downloads from Firebase Storage
