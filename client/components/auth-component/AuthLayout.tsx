@@ -1,6 +1,7 @@
 'use client';
 
-import { NavigationIcon, ShieldCheckIcon, MapPinIcon, RouteIcon } from 'lucide-react';
+import Image from 'next/image';
+import { ShieldCheckIcon, MapPinIcon, RouteIcon } from 'lucide-react';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -14,10 +15,8 @@ export function AuthLayout({ children, heading, subheading }: AuthLayoutProps) {
       {/* Left Side - Branding (Orange) - Desktop Only */}
       <div className="hidden lg:flex lg:w-1/2 bg-[#ff8c00] p-12 flex-col justify-between">
         <div className="flex items-center gap-2">
-          <div className="p-2 bg-black rounded-lg">
-            <NavigationIcon className="h-8 w-8 text-[#ff8c00]" />
-          </div>
-          <span className="text-2xl font-bold text-gray-900 tracking-wide">SAFE ROUTE</span>
+          <Image src="/logo.png" alt="SafeRoute logo" width={48} height={48} className="rounded-lg" />
+          <span className="text-2xl font-bold text-gray-900 tracking-wide">HazardHub</span>
         </div>
 
         <div className="space-y-6">
@@ -51,10 +50,8 @@ export function AuthLayout({ children, heading, subheading }: AuthLayoutProps) {
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 bg-[#1a1a1a]">
         {/* Mobile Header - Only visible on mobile */}
         <div className="flex flex-col items-center mb-8 lg:hidden">
-          <div className="p-4 bg-[#ff8c00] rounded-xl mb-4">
-            <NavigationIcon className="h-12 w-12 text-gray-900" />
-          </div>
-          <span className="text-2xl font-bold text-[#ff8c00] tracking-wide mb-2">SAFE ROUTE</span>
+          <Image src="/logo.png" alt="SafeRoute logo" width={64} height={64} className="rounded-xl mb-4" />
+          <span className="text-2xl font-bold text-[#ff8c00] tracking-wide mb-2">HazardHub</span>
           <p className="text-gray-400 text-sm">Navigate Safely, Anywhere You Go</p>
         </div>
 
