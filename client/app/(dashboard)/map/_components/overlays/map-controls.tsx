@@ -1,7 +1,10 @@
 'use client';
 
+import { useCallback } from 'react';
 import { Plus, Minus, Crosshair, AlertTriangle } from 'lucide-react';
+import { useMap as useGoogleMap } from '@vis.gl/react-google-maps';
 import { useMap } from '../map-provider';
+import { DEFAULT_CENTER, DEFAULT_ZOOM } from '@/lib/constants/map-config';
 import { cn } from '@/lib/utils';
 
 function ControlButton({
@@ -34,10 +37,41 @@ function ControlButton({
 
 export function MapControls() {
   const { state, dispatch } = useMap();
+  const googleMap = useGoogleMap();
 
   const toggleSOSPinMode = () => {
     dispatch({ type: 'TOGGLE_SOS_PIN_MODE', payload: !state.isSOSPinMode });
   };
+
+  const handleZoomIn = useCallback(() => {
+    if (!googleMap) return;
+    googleMap.setZoom((googleMap.getZoom() ?? DEFAULT_ZOOM) + 1);
+  }, [googleMap]);
+
+  const handleZoomOut = useCallback(() => {
+    if (!googleMap) return;
+    googleMap.setZoom((googleMap.getZoom() ?? DEFAULT_ZOOM) - 1);
+  }, [googleMap]);
+
+  const handleRecenter = useCallback(() => {
+    if (!googleMap) return;
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          googleMap.panTo({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          googleMap.setZoom(DEFAULT_ZOOM);
+        },
+        () => {
+          // Fallback to default center if geolocation denied
+          googleMap.panTo(DEFAULT_CENTER);
+          googleMap.setZoom(DEFAULT_ZOOM);
+        },
+      );
+    } else {
+      googleMap.panTo(DEFAULT_CENTER);
+      googleMap.setZoom(DEFAULT_ZOOM);
+    }
+  }, [googleMap]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -47,16 +81,16 @@ export function MapControls() {
       </ControlButton>
 
       <div className="mt-2 flex flex-col gap-2">
-        <ControlButton>
+        <ControlButton onClick={handleZoomIn}>
           <Plus className="size-[18px] text-white" />
         </ControlButton>
-        <ControlButton>
+        <ControlButton onClick={handleZoomOut}>
           <Minus className="size-[18px] text-white" />
         </ControlButton>
       </div>
 
       <div className="mt-2">
-        <ControlButton>
+        <ControlButton onClick={handleRecenter}>
           <Crosshair className="size-[18px] text-[#0066CC]" />
         </ControlButton>
       </div>

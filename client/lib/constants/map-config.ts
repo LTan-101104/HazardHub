@@ -1,4 +1,4 @@
-import type { LatLng, HazardMarker, RouteInfo, WeatherInfo, ChatMessage } from '@/types/map';
+import type { LatLng, HazardMarker, RouteInfo, ChatMessage } from '@/types/map';
 
 export const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
 export const GOOGLE_MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAP_ID;
@@ -24,14 +24,6 @@ export const DARK_MAP_STYLES = [
   { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
   { featureType: 'transit', stylers: [{ visibility: 'off' }] },
 ];
-
-// Mock data for demo
-export const MOCK_WEATHER: WeatherInfo = {
-  tempF: 28,
-  condition: 'Snow',
-  warning: 'Slippery roads',
-  icon: 'cloud-snow',
-};
 
 export const MOCK_HAZARDS: HazardMarker[] = [
   {
