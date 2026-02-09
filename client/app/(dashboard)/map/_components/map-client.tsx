@@ -24,6 +24,7 @@ import { auth } from '@/lib/firebase';
 import { getSOSEventsByUserId, deleteSOSEvent } from '@/lib/actions/sos-action';
 import { SOSEventStatus } from '@/types';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { X, AlertTriangle } from 'lucide-react';
 import { getNearbyHazards } from '@/lib/actions/hazard-action';
 
@@ -59,6 +60,66 @@ function MapLayout() {
 
   const prevSOSCountRef = useRef(0);
   const hasLoadedSOSRef = useRef(false);
+  const searchParams = useSearchParams();
+  const hasAppliedNavParamsRef = useRef(false);
+
+  // Handle navigation from saved locations (safety-profile page)
+  useEffect(() => {
+    if (hasAppliedNavParamsRef.current) return;
+
+    const lat = searchParams.get('lat');
+    const lng = searchParams.get('lng');
+    const name = searchParams.get('name');
+
+    if (lat && lng) {
+      const latitude = parseFloat(lat);
+      const longitude = parseFloat(lng);
+      if (Number.isNaN(latitude) || Number.isNaN(longitude)) return;
+
+      hasAppliedNavParamsRef.current = true;
+
+      // Set destination from the saved location
+      dispatch({
+        type: 'SET_TO_LOCATION',
+        payload: {
+          text: name || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+          position: { lat: latitude, lng: longitude },
+        },
+      });
+
+      // Set origin from browser geolocation
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            dispatch({
+              type: 'SET_FROM_LOCATION',
+              payload: {
+                text: 'Current Location',
+                position: { lat: pos.coords.latitude, lng: pos.coords.longitude },
+              },
+            });
+          },
+          () => {
+            dispatch({
+              type: 'SET_FROM_LOCATION',
+              payload: {
+                text: 'Current Location',
+                position: DEFAULT_CENTER,
+              },
+            });
+          },
+        );
+      } else {
+        dispatch({
+          type: 'SET_FROM_LOCATION',
+          payload: {
+            text: 'Current Location',
+            position: DEFAULT_CENTER,
+          },
+        });
+      }
+    }
+  }, [searchParams, dispatch]);
 
   // Load existing SOS events from the backend on mount
   useEffect(() => {

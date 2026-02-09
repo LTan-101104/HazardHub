@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { auth } from '@/lib/firebase';
 import { getSavedLocationsByUserId } from '@/lib/actions/saved_location-actions';
@@ -65,8 +66,8 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
-// TODO: ensure that the contacts get added to db
 export default function SafetyProfile() {
+  const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [locations, setLocations] = useState<SavedLocationDTO[]>([]);
   const [contacts, setContacts] = useState<EmergencyContactDTO[]>([]);
@@ -151,17 +152,15 @@ export default function SafetyProfile() {
     setShowEditLocationModal(true);
   };
 
-  // TODO: connect with map page and open location there instead of google maps
-  const handleNavigateToLocation = (latitude: number, longitude: number) => {
-    // Open in Google Maps or Apple Maps
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) {
-      // Try to open in native maps app
-      window.location.href = `maps://maps.google.com/maps?daddr=${latitude},${longitude}&amp;ll=`;
-    } else {
-      // Open in Google Maps web
-      window.open(`https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`, '_blank');
+  const handleNavigateToLocation = (location: SavedLocationDTO) => {
+    const params = new URLSearchParams({
+      lat: location.latitude.toString(),
+      lng: location.longitude.toString(),
+    });
+    if (location.name) {
+      params.set('name', location.name);
     }
+    router.push(`/map?${params.toString()}`);
   };
 
   const handleDeleteLocation = (location: SavedLocationDTO) => {
@@ -307,7 +306,7 @@ export default function SafetyProfile() {
                         Edit
                       </Button>
                       <Button
-                        onClick={() => handleNavigateToLocation(location.latitude, location.longitude)}
+                        onClick={() => handleNavigateToLocation(location)}
                         className="flex-1 bg-[#ff8400] hover:bg-[#ff8400]/90 text-black font-semibold"
                         size="sm"
                       >
