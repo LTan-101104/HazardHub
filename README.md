@@ -1,7 +1,7 @@
 # HazardHub
 
 - Official website: [HazardHub](https://hazard-hub-pymz.vercel.app/)
-- Gemini Hackathon Devpost submission: [HazardHub submission](https://devpost.com/submit-to/27555-gemini-3-hackathon/manage/submissions/916634-hazardhub/)
+- Gemini Hackathon Devpost submission: [HazardHub submission](https://devpost.com/software/hazardhub/)
 
 ## Inspiration
 
